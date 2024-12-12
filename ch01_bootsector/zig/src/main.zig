@@ -4,43 +4,31 @@ const VGA_PORT = 0x3D4;
 const VGA_DATA_PORT = 0x3D5;
 //const VIDEO_MEMORY = 0xB8000;
 
-const RTC_PORT = 0x70; // Command port
-const RTC_DATA_PORT = 0x71; // Data port
+// New function to get time using BIOS
+fn get_rtc_time() struct { hours: u8, minutes: u8, seconds: u8 } {
+    var hours: u8 = undefined;
+    var minutes: u8 = undefined;
+    var seconds: u8 = undefined;
 
-// Constants for RTC registers
-const RTC_SECONDS = 0x00;
-const RTC_MINUTES = 0x02;
-const RTC_HOURS = 0x04;
-
-fn outbx(port: u16, value: u8) void {
-    asm volatile ("outb %0, %1"
-        : // no output
-        : [value] "{ax}" (value),
-          [port] "Nd" (port),
+    asm volatile (
+        \\movb $0x02, %%ah  # BIOS get real time clock
+        \\int $0x1A         # Call BIOS time services
+        \\movb %%ch, %[hour]# Hours in CH
+        \\movb %%cl, %[min] # Minutes in CL
+        \\movb %%dh, %[sec] # Seconds in DH
+        : [sec] "=m" (seconds),
+          [min] "=m" (minutes),
+          [hour] "=m" (hours),
+        :
+        : "ax", "cx", "dx"
     );
-}
 
-fn outb(port: u16, value: u8) void {
-    asm volatile ("outb %0, %1"
-        : // no output
-        : [value] "{ax}" (value),
-          [port] "Nd" (port),
-    );
-}
+    // Convert from BCD to binary if needed
+    seconds = ((seconds >> 4) * 10) + (seconds & 0x0F);
+    minutes = ((minutes >> 4) * 10) + (minutes & 0x0F);
+    hours = ((hours >> 4) * 10) + (hours & 0x0F);
 
-fn inb(port: u16) u8 {
-    var value: u8 = 0;
-    asm volatile ("inb %1, %0"
-        : [value] "=a" (value),
-        : [port] "Nd" (port),
-    );
-    return value;
-}
-
-// Function to read a byte from RTC using port 0x70 and 0x71
-fn read_rtc_register(register: u8) u8 {
-    outb(RTC_PORT, register);
-    return inb(RTC_DATA_PORT);
+    return .{ .hours = hours, .minutes = minutes, .seconds = seconds };
 }
 
 const VIDEO_MEMORY: *u16 = @ptrFromInt(0xB8000);
@@ -68,28 +56,26 @@ pub fn main() void {
     const greeting: []const u8 = "Hello, bootsector!";
     write_string(greeting);
 
-    // Infinite loop to display the time from RTC
+    // Infinite loop to display the time
     while (true) {
-        // Read RTC time registers
-        const seconds = read_rtc_register(RTC_SECONDS);
-        const minutes = read_rtc_register(RTC_MINUTES);
-        const hours = read_rtc_register(RTC_HOURS);
+        // Get time using BIOS
+        const time = get_rtc_time();
 
         // Convert time to string format "HH:MM:SS"
         var time_str: [8]u8 = undefined;
         var buf: [4]u8 = undefined;
 
-        int_to_str(hours, &buf);
+        int_to_str(time.hours, &buf);
         time_str[0] = buf[0];
         time_str[1] = buf[1];
         time_str[2] = ':';
 
-        int_to_str(minutes, &buf);
+        int_to_str(time.minutes, &buf);
         time_str[3] = buf[0];
         time_str[4] = buf[1];
         time_str[5] = ':';
 
-        int_to_str(seconds, &buf);
+        int_to_str(time.seconds, &buf);
         time_str[6] = buf[0];
         time_str[7] = buf[1];
 
