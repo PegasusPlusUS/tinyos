@@ -25,7 +25,7 @@ start:
 
     ; Print green "safe to turn off" message at line 3
     mov ah, 0x02        ; Set cursor position
-    mov dh, 2           ; Row 2 (line 3)
+    mov dh, 4           ; Row 4 (line 5)
     mov dl, 0           ; Column 0
     int 0x10
     mov si, safe_msg
@@ -35,7 +35,7 @@ start:
 main_loop:
     ; Print adv message "TinyOS is an open source tutorial at https://github.com/pegasusplus/tinyos" at line 4
     mov ah, 0x02        ; Set cursor position
-    mov dh, 3           ; Row 3 (line 4)
+    mov dh, 6           ; Row 6 (line 7)
     mov dl, 0           ; Column 0
     int 0x10
     mov si, adv_msg
@@ -44,7 +44,7 @@ main_loop:
 
     ; Position cursor for time display at line 2
     mov ah, 0x02        ; Set cursor position
-    mov dh, 1           ; Row 1 (line 2)
+    mov dh, 2           ; Row 2 (line 3)
     mov dl, 0           ; Column 0
     int 0x10
 
