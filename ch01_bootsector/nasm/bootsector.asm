@@ -20,7 +20,7 @@ start:
     mov dl, 0           ; Column 0
     int 0x10
     mov si, hello_msg
-    mov bl, 0x0E        ; Yellow color (0x0E)
+    mov bl, 0x0E        ; Yellow color
     call print_string_color
 
     ; Print green "safe to turn off" message at line 3
@@ -33,6 +33,15 @@ start:
     call print_string_color
 
 main_loop:
+    ; Print adv message "TinyOS is an open source tutorial at https://github.com/pegasusplus/tinyos" at line 4
+    mov ah, 0x02        ; Set cursor position
+    mov dh, 3           ; Row 3 (line 4)
+    mov dl, 0           ; Column 0
+    int 0x10
+    mov si, adv_msg
+    mov bl, [adv_color]   ; Light blue color
+    call print_string_color 
+
     ; Position cursor for time display at line 2
     mov ah, 0x02        ; Set cursor position
     mov dh, 1           ; Row 1 (line 2)
@@ -58,14 +67,30 @@ main_loop:
     
     ; Print the time in white
     mov si, time_str
-    mov bl, 0x0F        ; Bright white color (0x0F)
+    mov bl, 0x0F        ; Bright white color
     call print_string_color
     
     ; Add a small delay
     mov cx, 0xFFFF
 delay:
     loop delay
-    
+    mov al, [adv_color_freq1]
+    inc al
+    mov [adv_color_freq1], al
+    cmp al, [adv_color_freq_max1]
+    jne main_loop
+    mov al, 0
+    mov [adv_color_freq1], al
+    mov al, [adv_color_freq2]
+    inc al
+    mov [adv_color_freq2], al
+    cmp al, [adv_color_freq_max2]
+    jne main_loop
+    mov al, 0
+    mov [adv_color_freq2], al
+    mov al, [adv_color]   ; Slightly change color
+    inc al
+    mov [adv_color], al
     jmp main_loop       ; Repeat forever
 
 ; Function to convert BCD to ASCII
@@ -82,30 +107,50 @@ bcd_to_ascii:
     pop bx
     ret
 
-; Function to print null-terminated string
-; Input: SI = pointer to string
-print_string:
+; Function to print colored string
+; Input: SI = pointer to string, BL = color attribute
+print_string_color:
     push ax
     push bx
-    mov ah, 0x0E        ; BIOS teletype output
-    mov bh, 0           ; Page number
-    mov bl, 0x07        ; Light gray on black
+    push cx
 .loop:
     lodsb               ; Load next character
     test al, al         ; Check for null terminator
-    jz .done            ; If null, we're done
-    int 0x10            ; Print character
+    jz .done
+    mov ah, 0x09        ; BIOS write character and attribute
+    mov cx, 1           ; Print one character
+    push bx
+    mov bh, 0           ; Page number
+    int 0x10
+    pop bx
+    
+    ; Move cursor forward
+    mov ah, 0x03        ; Get cursor position
+    mov bh, 0
+    int 0x10
+    inc dl              ; Increment column
+    mov ah, 0x02        ; Set cursor position
+    int 0x10
+    
     jmp .loop
 .done:
+    pop cx
     pop bx
     pop ax
     ret
 
 ; Data
-hello_msg db 'Hello, bootsector!', 13, 10, 0
-time_str db '00:00:00', 13, 10, 0
-safe_msg db 'Safe to turn off', 13, 10, 0
+hello_msg db 'Hello, bootsector!', 0
+time_str db '00:00:00', 0
+safe_msg db 'Now it is safe to turn off your box.', 0
+adv_msg db 'TinyOS is an open source tutorial at https://github.com/pegasusplus/tinyos', 0
+adv_color db 0x0C
+adv_color_step db 0x01
+adv_color_freq1 db 0x00
+adv_color_freq_max1 db 0x1F
+adv_color_freq2 db 0x00
+adv_color_freq_max2 db 0x0F
 
 ; Pad to 510 bytes and add boot signature
 times 510-($-$$) db 0
-dw 0xAA55 
+dw 0xAA55
