@@ -8,7 +8,7 @@ fn main() {
     let pipe_name = r"\\.\pipe\bootsector";
     let boot_sector = [0u8; 512]; // Your boot sector data here
 
-    let pipe = OpenOptions::new()
+    let mut pipe = OpenOptions::new()
         .write(true)
         .custom_flags(FILE_FLAG_OVERLAPPED)
         .open(pipe_name)
