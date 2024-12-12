@@ -1,0 +1,15 @@
+[package]
+name = "bootsector"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name="tinyos"
+path="src/main.rs"
+
+[[bin]]
+name="bootsector"
+path="src/bin/bootsector.rs"
+
+[dependencies]
+winapi = { version = "0.3", features = ["winbase"] }
