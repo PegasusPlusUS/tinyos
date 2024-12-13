@@ -25,7 +25,8 @@ start:
 ; Update RTC
     call read_rtc
     call print_rtc
-
+    call print_adv_scroll
+    
 ; delay a while and back to .main_loop
 ; delay some cycle then through
     call delay_through
