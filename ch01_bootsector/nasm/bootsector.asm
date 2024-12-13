@@ -13,27 +13,71 @@ start:
     mov ax, 0x0003      ; Text mode 80x25, 16 colors
     int 0x10            ; BIOS video interrupt
 
-    call print_hello
+; Print hello message at line 1 in yellow
+    mov ah, 0x02        ; Set cursor position
+    xor bh, bh          ; Page 0
+    mov dh, 0           ; Row 0 (line 1)
+    mov dl, 0           ; Column 0
+    int 0x10
+    mov bl, 0x0E        ; Yellow color
+    mov si, hello_msg
+    call print_string_color
 
 .main_loop:
-    call check_space_key
+; Get time from BIOS RTC
+    mov ah, 0x02        ; BIOS get real time clock
+    int 0x1A            ; Call BIOS time services
+    
+    ; Convert BCD to ASCII and store in time_str
+    mov al, ch          ; Hours
+    call bcd_to_ascii
+    mov [time_str], ax
+    
+    mov al, cl          ; Minutes
+    call bcd_to_ascii
+    mov [time_str_min], ax
+    
+    mov al, dh          ; Seconds
+    call bcd_to_ascii
+    mov [time_str_sec], ax
+ 
+; Position cursor for time display at line 3
+    mov ah, 0x02        ; Set cursor position
+    mov dh, 2           ; Row 2 (line 3)
+    mov dl, 0           ; Column 0
+    int 0x10
 
+    ; Print the time in white
+    mov bl, 0x0F        ; Bright white color
+    mov si, time_str
+    call print_string_color
+
+; delay a while
+    mov cx, 0x7FFF
+.delay:
+    nop
+    loop .delay
+
+    ; delay_through_step dw 0x00
+    mov ax, [delay_through_step]
+    inc ax
+    cmp ax, [delay_through_max]
+    jb .no_wrap_delay_step
+    xor ax, ax
+.no_wrap_delay_step:
+    mov [delay_through_step], ax
+    test ax, ax
+    jnz .main_loop
+; through:
+
+    call check_space_key
     ; Check pause state
     test al, al
     jnz .paused_action
 
 ; otherwise clear paused display, through
     call clear_paused;
-; Update RTC
-    call read_rtc
-    call print_rtc
     call print_adv_scroll
-
-; delay a while and back to .main_loop
-; delay some cycle then through
-    call delay_through
-    cmp al, al
-    jz .main_loop
 
     ; Update color
     mov al, [adv_color]
@@ -50,7 +94,7 @@ start:
     call flash_paused_display
     jmp .main_loop
 
-; Flash or clear the "Paused" display
+; Flash "Paused" display
 flash_paused_display:
     mov al, [is_paused_display]
     xor al, 1           ; Toggle between 0 and 1
@@ -64,8 +108,8 @@ flash_paused_display:
     mov bl, 0x0E        ; Yellow color
     jmp print_pause_msg
 
-; Clear the "Paused" message (separate function)
 clear_paused:
+; Clear the "Paused" message (separate function)
     mov bl, 0x00        ; Black color (clear text)
 
 print_pause_msg:
@@ -98,43 +142,6 @@ check_space_key:
     xor al, al
     ret
 
-
-; Simple delay, and cycle adv_color_freq_max1 * max2 times, then through.
-delay_through:
-    mov cx, 0x7FFF
-.delay:
-    nop
-    loop .delay
-
-    ; adv_color_freq1 db 0x00
-    mov al, [adv_color_freq1]
-    inc al
-    cmp al, [adv_color_freq_max1]
-    jb .no_wrap_freq1
-    xor al, al
-    jmp .freq2
-.no_wrap_freq1:
-    mov [adv_color_freq1], al
-    ret
-
-.freq2:
-    mov [adv_color_freq1], al
-    mov al, [adv_color_freq2]
-    inc al
-    cmp al, [adv_color_freq_max2]
-    jb .no_wrap_freq2
-    xor al, al
-    jmp .through
-.no_wrap_freq2:
-    mov [adv_color_freq2], al
-    xor al, al
-    ret
-
-.through:
-    mov [adv_color_freq2], al
-    mov al, 1
-    ret
-
 print_adv_scroll:
     ; Print adv message with scrolling
     mov ah, 0x02        ; Set cursor position
@@ -142,30 +149,26 @@ print_adv_scroll:
     mov dl, 0           ; Column 0
     int 0x10
     
-    ; Print from scroll_pos
+    mov bl, [adv_color]
+; Print from scroll_pos
     mov si, adv_msg
     add si, [scroll_pos]
-    mov bl, [adv_color]
-    ; save char at scroll_pos
+; save char at scroll_pos
     mov al, byte [si]
     mov [char_at_scroll_pos], al
     call print_string_color
+; Continue print from beginning to scroll_pos
     mov si, adv_msg
     add si, [scroll_pos]
     mov byte [si], 0
-    ; Continue print from beginning
     mov si, adv_msg
-    mov bl, [adv_color]
     call print_string_color
-    ; restore char at scroll_pos
+; restore char at scroll_pos
     mov si, adv_msg
     add si, [scroll_pos]
     mov al, [char_at_scroll_pos]
     mov byte [si], al
-    call scroll_adv_pos
-    ret
-
-scroll_adv_pos:
+;scroll_adv_pos:
     mov ax, [scroll_pos]
     inc ax
     cmp ax, [adv_msg_len]
@@ -173,50 +176,6 @@ scroll_adv_pos:
     xor ax, ax
 .not_wrap:
     mov [scroll_pos], ax
-    ret
-
-; Print hello message at line 1 in yellow
-print_hello:
-    mov ah, 0x02        ; Set cursor position
-    xor bh, bh          ; Page 0
-    mov dh, 0           ; Row 0 (line 1)
-    mov dl, 0           ; Column 0
-    int 0x10
-    mov si, hello_msg
-    mov bl, 0x0E        ; Yellow color
-    call print_string_color
-    ret
-
-; Get time from BIOS RTC
-read_rtc:
-    mov ah, 0x02        ; BIOS get real time clock
-    int 0x1A            ; Call BIOS time services
-    
-    ; Convert BCD to ASCII and store in time_str
-    mov al, ch          ; Hours
-    call bcd_to_ascii
-    mov [time_str], ax
-    
-    mov al, cl          ; Minutes
-    call bcd_to_ascii
-    mov [time_str + 3], ax
-    
-    mov al, dh          ; Seconds
-    call bcd_to_ascii
-    mov [time_str + 6], ax
-    ret
-
-; Position cursor for time display at line 3
-print_rtc:
-    mov ah, 0x02        ; Set cursor position
-    mov dh, 2           ; Row 2 (line 3)
-    mov dl, 0           ; Column 0
-    int 0x10
-
-    ; Print the time in white
-    mov si, time_str
-    mov bl, 0x0F        ; Bright white color
-    call print_string_color
     ret
 
 ; Function to convert BCD to ASCII
@@ -267,7 +226,9 @@ print_string_color:
 
 ; Data
 hello_msg db 'Hi, OS!', 0
-time_str db '00:00:00', 0
+time_str db '00:'
+time_str_min db '00:'
+time_str_sec db '00', 0
 adv_msg db 'TinyOS at https://github.com/pegasusplus/tinyos ', 0
 adv_msg_len dw $ - adv_msg - 1
 ;adv_msg_len equ $ - adv_msg - 1
@@ -275,10 +236,8 @@ scroll_pos dw 0
 char_at_scroll_pos db 0
 adv_color db 0x0C
 adv_color_step db 0x01
-adv_color_freq1 db 0x00
-adv_color_freq_max1 db 0x1F
-adv_color_freq2 db 0x00
-adv_color_freq_max2 db 0x0F
+delay_through_step dw 0x00
+delay_through_max dw 0x1FFF
 is_paused db 0          ; 0 = running, 1 = paused
 is_paused_display db 0
 paused_msg db 'Paused'
