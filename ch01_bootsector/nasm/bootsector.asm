@@ -14,13 +14,103 @@ start:
     int 0x10            ; BIOS video interrupt
 
     call print_hello
-    call print_turn_off
 
-main_loop:
+.main_loop:
+    call check_space_key
+
+    ; Check pause state
+    test al, al
+    jnz .paused_action
+
+; Update RTC
     call read_rtc
     call print_rtc
 
-    ; Simple delay
+; delay a while and back to .main_loop
+; delay some cycle then through
+    call delay_through
+    cmp al, al
+    jz .main_loop
+
+    mov al, [is_paused]
+; if paused, toggle paused display and jmp main_loop,
+    jnz .paused_action
+
+; otherwise clear paused display, through
+    call clear_paused;
+
+    ; Update color
+    mov al, [adv_color]
+    inc al
+    cmp al, 0x10
+    jb .no_background
+    xor al, al
+.no_background:
+    mov [adv_color], al
+    call print_adv_scroll
+    jmp .main_loop
+
+.paused_action:
+    call flash_paused_display
+    jmp .main_loop
+
+; Toggle "Paused" display
+flash_paused_display:
+    mov al, [is_paused_display]
+    xor al, 1           ; Toggle between 0 and 1
+    mov [is_paused_display], al
+
+    ; Display or clear "Paused" message
+    mov al, [is_paused_display]
+    test al, al
+    jz .clear_paused
+
+    ; Display "Paused" message
+    mov ah, 0x02        ; Set cursor position
+    mov dh, 2           ; Row 2 (line 3)
+    mov dl, 37          ; Column 9 (after time)
+    int 0x10
+    mov si, paused_msg
+    mov bl, 0x0E        ; Yellow color
+    call print_string_color
+    ret
+; ? :
+.clear_paused:
+clear_paused:
+    ; Clear "Paused" message
+    mov ah, 0x02        ; Set cursor position
+    mov dh, 2           ; Row 2 (line 3)
+    mov dl, 9           ; Column 9 (after time)
+    int 0x10
+    mov si, paused_msg
+    mov bl, 0x00        ; Black color (clear text)
+    call print_string_color
+    ret
+
+; Check for spacebar press
+check_space_key:
+    mov ah, 0x01        ; BIOS check for keystroke
+    int 0x16            ; Keyboard services
+    jz .no_space_key          ; Jump if no key pressed
+    
+    mov ah, 0x00        ; BIOS read keystroke
+    int 0x16            ; Keyboard services
+    
+    cmp al, ' '         ; Compare with space
+    jne .no_space_key         ; If not space, continue
+    
+    ; Toggle pause state
+    mov al, [is_paused]
+    xor al, 1           ; Toggle between 0 and 1
+    mov [is_paused], al
+    ret
+.no_space_key:
+    xor al, al
+    ret
+
+
+; Simple delay, and cycle adv_color_freq_max1 * max2 times, then through.
+delay_through:
     mov cx, 0x7FFF
 .delay:
     nop
@@ -35,7 +125,7 @@ main_loop:
     jmp .freq2
 .no_wrap_freq1:
     mov [adv_color_freq1], al
-    jmp main_loop
+    ret
 
 .freq2:
     mov [adv_color_freq1], al
@@ -44,24 +134,16 @@ main_loop:
     cmp al, [adv_color_freq_max2]
     jb .no_wrap_freq2
     xor al, al
-    jmp .freq3
+    jmp .through
 .no_wrap_freq2:
     mov [adv_color_freq2], al
-    jmp main_loop
-
-.freq3:
-    mov [adv_color_freq2], al
-
-    ; Update color
-    mov al, [adv_color]
-    inc al
-    cmp al, 0x10
-    jb .no_background
     xor al, al
-.no_background:
-    mov [adv_color], al
-    call print_adv_scroll
-    jmp main_loop
+    ret
+
+.through:
+    mov [adv_color_freq2], al
+    mov al, 1
+    ret
 
 print_adv_scroll:
     ; Print adv message with scrolling
@@ -112,17 +194,6 @@ print_hello:
     int 0x10
     mov si, hello_msg
     mov bl, 0x0E        ; Yellow color
-    call print_string_color
-    ret
-
-; Print green "safe to turn off" message at line 5
-print_turn_off:
-    mov ah, 0x02        ; Set cursor position
-    mov dh, 4           ; Row 4 (line 5)
-    mov dl, 0           ; Column 0
-    int 0x10
-    mov si, safe_msg
-    mov bl, 0x0A        ; Light green color
     call print_string_color
     ret
 
@@ -205,10 +276,9 @@ print_string_color:
     ret
 
 ; Data
-hello_msg db 'Hello, bootsector!', 0
+hello_msg db 'Hi, OS!', 0
 time_str db '00:00:00', 0
-safe_msg db 'Now it is safe to turn off your box.', 0
-adv_msg db 'TinyOS is an open source tutorial at https://github.com/pegasusplus/tinyos  ', 0
+adv_msg db 'TinyOS at https://github.com/pegasusplus/tinyos ', 0
 adv_msg_len dw $ - adv_msg - 1
 ;adv_msg_len equ $ - adv_msg - 1
 scroll_pos dw 0
@@ -219,6 +289,9 @@ adv_color_freq1 db 0x00
 adv_color_freq_max1 db 0x1F
 adv_color_freq2 db 0x00
 adv_color_freq_max2 db 0x0F
+is_paused db 0          ; 0 = running, 1 = paused
+is_paused_display db 0
+paused_msg db 'Paused'
 
 ; Pad to 510 bytes and add boot signature
 times 510-($-$$) db 0
