@@ -50,32 +50,32 @@ start:
     call flash_paused_display
     jmp .main_loop
 
-; Toggle "Paused" display
+; Flash or clear the "Paused" display
 flash_paused_display:
     mov al, [is_paused_display]
     xor al, 1           ; Toggle between 0 and 1
     mov [is_paused_display], al
 
-    ; Display or clear "Paused" message
-    mov al, [is_paused_display]
+    ; Display or clear "Paused" message based on is_paused_display
     test al, al
-    jz .clear_paused
+    jz clear_paused     ; If is_paused_display is 0, clear the message
 
     ; Display "Paused" message
     mov bl, 0x0E        ; Yellow color
-.print_paused:
+    jmp print_pause_msg
+
+; Clear the "Paused" message (separate function)
+clear_paused:
+    mov bl, 0x00        ; Black color (clear text)
+
+print_pause_msg:
     mov ah, 0x02        ; Set cursor position
     mov dh, 2           ; Row 2 (line 3)
-    mov dl, 37          ; Column 9 (after time)
+    mov dl, 37          ; Column 37
     int 0x10
     mov si, paused_msg
     call print_string_color
     ret
-.clear_paused:
-clear_paused:
-    ; Clear "Paused" message
-    mov bl, 0x00        ; Black color (clear text)
-    jmp .print_paused
 
 ; Check for spacebar press, return al is paused
 check_space_key:
