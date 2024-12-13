@@ -24,8 +24,25 @@ start:
     call print_string_color
 
 .main_loop:
+; delay a while
+.delay_step:
+    mov cx, 0x01FF
+.delay:
+    nop
+    loop .delay
 
-; Check for spacebar press, return al is paused
+    ; delay_through_step dw 0x00
+    mov ax, [delay_through_step]
+    inc ax
+    cmp ax, [delay_through_max]
+    jb .no_wrap_delay_step
+    xor ax, ax
+.no_wrap_delay_step:
+    mov [delay_through_step], ax
+    test ax, ax
+    jnz .delay_step
+ 
+ ; Check for spacebar press, return al is paused
     mov ah, 0x01        ; BIOS check for keystroke
     int 0x16            ; Keyboard services
     jz .no_space_key          ; Jump if no key pressed
@@ -50,7 +67,7 @@ start:
     test al, al
     jnz .paused_action
 
-; otherwise clear paused display, through
+; otherwise clear paused display
     call clear_paused;
 
     ; Update color
@@ -90,24 +107,6 @@ start:
     mov bl, 0x0F        ; Bright white color
     mov si, time_str
     call print_string_color
-
-; delay a while
-.delay_step:
-    mov cx, 0x01FF
-.delay:
-    nop
-    loop .delay
-
-    ; delay_through_step dw 0x00
-    mov ax, [delay_through_step]
-    inc ax
-    cmp ax, [delay_through_max]
-    jb .no_wrap_delay_step
-    xor ax, ax
-.no_wrap_delay_step:
-    mov [delay_through_step], ax
-    test ax, ax
-    jnz .delay_step
     jmp .main_loop
 
 .paused_action:
