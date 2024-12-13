@@ -13,7 +13,107 @@ start:
     mov ax, 0x0003      ; Text mode 80x25, 16 colors
     int 0x10            ; BIOS video interrupt
 
-    ; Print hello message at line 1 in yellow
+    call print_hello
+    call print_turn_off
+
+main_loop:
+    call read_rtc
+    call print_rtc
+
+    ; Simple delay
+    mov cx, 0x7FFF
+.delay:
+    nop
+    loop .delay
+
+    ; adv_color_freq1 db 0x00
+    mov al, [adv_color_freq1]
+    inc al
+    cmp al, [adv_color_freq_max1]
+    jb .no_wrap_freq1
+    xor al, al
+    jmp .freq2
+.no_wrap_freq1:
+    mov [adv_color_freq1], al
+    jmp main_loop
+
+.freq2:
+    mov [adv_color_freq1], al
+    mov al, [adv_color_freq2]
+    inc al
+    cmp al, [adv_color_freq_max2]
+    jb .no_wrap_freq2
+    xor al, al
+    jmp .freq3
+.no_wrap_freq2:
+    mov [adv_color_freq2], al
+    jmp main_loop
+
+.freq3:
+    mov [adv_color_freq2], al
+
+    ; Update scroll position
+    mov al, [scroll_pos]
+    inc al
+    cmp al, [adv_msg_len]
+    jb .no_wrap
+    xor al, al          ; Reset to 0 if we reach the end
+.no_wrap:
+    mov [scroll_pos], al
+
+    ; Update color
+    mov al, [adv_color]
+    inc al
+    cmp al, 0x10
+    jb .no_background
+    xor al, al
+.no_background:
+    mov [adv_color], al
+    call print_adv_scroll
+    jmp main_loop
+
+print_adv_scroll:
+    ; Print adv message with scrolling
+    mov ah, 0x02        ; Set cursor position
+    mov dh, 6           ; Row 6 (line 7)
+    mov dl, 0           ; Column 0
+    int 0x10
+    
+    ; Print from scroll_pos
+    mov si, adv_msg
+    add si, [scroll_pos]
+    mov bl, [adv_color]
+    ; save char at scroll_pos
+    ;mov al, [si]
+    ;mov [char_at_scroll_pos], al
+    call print_string_color
+    ;mov si, adv_msg
+    ;add si, [scroll_pos]
+    ;mov byte [si], 0
+    ;; Continue print from beginning
+    ;mov si, adv_msg
+    ;mov bl, [adv_color]
+    ;call print_string_color
+    ;; restore char at scroll_pos
+    ;mov si, adv_msg
+    ;add si, [scroll_pos]
+    ;mov al, [char_at_scroll_pos]
+    ;mov [si], al
+    call scroll_adv_pos
+    ret
+
+scroll_adv_pos:
+    mov ax, [scroll_pos]
+    inc ax
+    cmp ax, [adv_msg_len]
+    jb .not_wrap
+    xor ax, ax
+.not_wrap:
+    mov [scroll_pos], ax
+    ret
+
+; Print hello message at line 1 in yellow
+print_hello:
     mov ah, 0x02        ; Set cursor position
     xor bh, bh          ; Page 0
     mov dh, 0           ; Row 0 (line 1)
@@ -22,8 +122,10 @@ start:
     mov si, hello_msg
     mov bl, 0x0E        ; Yellow color
     call print_string_color
+    ret
 
-    ; Print green "safe to turn off" message at line 3
+; Print green "safe to turn off" message at line 5
+print_turn_off:
     mov ah, 0x02        ; Set cursor position
     mov dh, 4           ; Row 4 (line 5)
     mov dl, 0           ; Column 0
@@ -31,15 +133,10 @@ start:
     mov si, safe_msg
     mov bl, 0x0A        ; Light green color
     call print_string_color
+    ret
 
-main_loop:
-    ; Position cursor for time display at line 2
-    mov ah, 0x02        ; Set cursor position
-    mov dh, 2           ; Row 2 (line 3)
-    mov dl, 0           ; Column 0
-    int 0x10
-
-    ; Get time from BIOS RTC
+; Get time from BIOS RTC
+read_rtc:
     mov ah, 0x02        ; BIOS get real time clock
     int 0x1A            ; Call BIOS time services
     
@@ -55,71 +152,20 @@ main_loop:
     mov al, dh          ; Seconds
     call bcd_to_ascii
     mov [time_str + 6], ax
-    
+    ret
+
+; Position cursor for time display at line 3
+print_rtc:
+    mov ah, 0x02        ; Set cursor position
+    mov dh, 2           ; Row 2 (line 3)
+    mov dl, 0           ; Column 0
+    int 0x10
+
     ; Print the time in white
     mov si, time_str
     mov bl, 0x0F        ; Bright white color
     call print_string_color
-
-    ; Print adv message with scrolling
-    mov ah, 0x02        ; Set cursor position
-    mov dh, 6           ; Row 6 (line 7)
-    mov dl, 0           ; Column 0
-    int 0x10
-    
-    ; Print from scroll_pos
-    mov si, adv_msg
-    add si, [scroll_pos]
-    mov bl, [adv_color]
-    ; save char at scroll_pos
-    mov al, [si]
-    mov [char_at_scroll_pos], al
-    call print_string_color
-    mov si, adv_msg
-    add si, [scroll_pos]
-    mov byte [si], 0
-    ; Continue print from beginning
-    mov si, adv_msg
-    mov bl, [adv_color]
-    call print_string_color
-    ; restore char at scroll_pos
-    mov si, adv_msg
-    add si, [scroll_pos]
-    mov al, [char_at_scroll_pos]
-    mov [si], al
-
-    ; Simple delay
-    mov cx, 0x2FFF
-.delay:
-    nop
-    loop .delay
-
-    ; Update scroll position
-    mov al, [scroll_pos]
-    inc al
-    cmp al, [adv_msg_len]
-    jb .no_wrap
-    xor al, al          ; Reset to 0 if we reach the end
-.no_wrap:
-    mov [scroll_pos], al
-
-    ; Update color
-    mov al, [adv_color]
-    inc al
-    mov [adv_color], al
-
-    ; Increase scroll_pos
-    mov al, [scroll_pos]
-    inc al
-    mov [scroll_pos], al
-    ; if scroll_pos is greater than adv_msg_len, reset to 0
-    cmp al, [adv_msg_len]
-    jb .no_reset
-    xor al, al
-    mov [scroll_pos], al
-.no_reset:
-
-    jmp main_loop
+    ret
 
 ; Function to convert BCD to ASCII
 ; Input: AL = BCD number
@@ -172,8 +218,9 @@ hello_msg db 'Hello, bootsector!', 0
 time_str db '00:00:00', 0
 safe_msg db 'Now it is safe to turn off your box.', 0
 adv_msg db 'TinyOS is an open source tutorial at https://github.com/pegasusplus/tinyos', 0
-adv_msg_len equ $ - adv_msg - 1
-scroll_pos db 0
+adv_msg_len dw $ - adv_msg - 1
+;adv_msg_len equ $ - adv_msg - 1
+scroll_pos dw 0
 char_at_scroll_pos db 0
 adv_color db 0x0C
 adv_color_step db 0x01
