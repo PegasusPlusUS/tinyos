@@ -4,6 +4,10 @@ use std::os::windows::fs::OpenOptionsExt;
 //use std::os::windows::io::AsRawHandle;
 use winapi::um::winbase::FILE_FLAG_OVERLAPPED;
 
+// ToDO
+// A tool to create a named pipe that can let compiler/linker write the boot sector to it
+// then compress/encode save it to a file. And later this tool can decode/decompress and write
+// it back to the named pipe for Bochs or QEMU to load as boot sector.
 fn main() {
     let pipe_name = r"\\.\pipe\bootsector";
     let boot_sector = [0u8; 512]; // Your boot sector data here
