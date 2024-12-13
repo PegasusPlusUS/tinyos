@@ -52,15 +52,6 @@ main_loop:
 .freq3:
     mov [adv_color_freq2], al
 
-    ; Update scroll position
-    mov al, [scroll_pos]
-    inc al
-    cmp al, [adv_msg_len]
-    jb .no_wrap
-    xor al, al          ; Reset to 0 if we reach the end
-.no_wrap:
-    mov [scroll_pos], al
-
     ; Update color
     mov al, [adv_color]
     inc al
@@ -84,21 +75,21 @@ print_adv_scroll:
     add si, [scroll_pos]
     mov bl, [adv_color]
     ; save char at scroll_pos
-    ;mov al, [si]
-    ;mov [char_at_scroll_pos], al
+    mov al, byte [si]
+    mov [char_at_scroll_pos], al
     call print_string_color
-    ;mov si, adv_msg
-    ;add si, [scroll_pos]
-    ;mov byte [si], 0
-    ;; Continue print from beginning
-    ;mov si, adv_msg
-    ;mov bl, [adv_color]
-    ;call print_string_color
-    ;; restore char at scroll_pos
-    ;mov si, adv_msg
-    ;add si, [scroll_pos]
-    ;mov al, [char_at_scroll_pos]
-    ;mov [si], al
+    mov si, adv_msg
+    add si, [scroll_pos]
+    mov byte [si], 0
+    ; Continue print from beginning
+    mov si, adv_msg
+    mov bl, [adv_color]
+    call print_string_color
+    ; restore char at scroll_pos
+    mov si, adv_msg
+    add si, [scroll_pos]
+    mov al, [char_at_scroll_pos]
+    mov byte [si], al
     call scroll_adv_pos
     ret
 
@@ -217,7 +208,7 @@ print_string_color:
 hello_msg db 'Hello, bootsector!', 0
 time_str db '00:00:00', 0
 safe_msg db 'Now it is safe to turn off your box.', 0
-adv_msg db 'TinyOS is an open source tutorial at https://github.com/pegasusplus/tinyos', 0
+adv_msg db 'TinyOS is an open source tutorial at https://github.com/pegasusplus/tinyos  ', 0
 adv_msg_len dw $ - adv_msg - 1
 ;adv_msg_len equ $ - adv_msg - 1
 scroll_pos dw 0
