@@ -24,6 +24,45 @@ start:
     call print_string_color
 
 .main_loop:
+
+; Check for spacebar press, return al is paused
+    mov ah, 0x01        ; BIOS check for keystroke
+    int 0x16            ; Keyboard services
+    jz .no_space_key          ; Jump if no key pressed
+    
+    mov ah, 0x00        ; BIOS read keystroke
+    int 0x16            ; Keyboard services
+    
+    cmp al, ' '         ; Compare with space
+    jne .no_space_key         ; If not space, continue
+    
+    ; Toggle pause state
+    mov al, [is_paused]
+    xor al, 1           ; Toggle between 0 and 1
+    mov [is_paused], al
+    jmp .check_result
+
+.no_space_key:
+    xor al, al
+
+; Check pause state
+.check_result:
+    test al, al
+    jnz .paused_action
+
+; otherwise clear paused display, through
+    call clear_paused;
+
+    ; Update color
+    mov al, [adv_color]
+    inc al
+    cmp al, 0x10
+    jb .no_background
+    xor al, al
+.no_background:
+    mov [adv_color], al
+    call print_adv_scroll
+ 
 ; Get time from BIOS RTC
     mov ah, 0x02        ; BIOS get real time clock
     int 0x1A            ; Call BIOS time services
@@ -53,7 +92,8 @@ start:
     call print_string_color
 
 ; delay a while
-    mov cx, 0x7FFF
+.delay_step:
+    mov cx, 0x01FF
 .delay:
     nop
     loop .delay
@@ -67,27 +107,7 @@ start:
 .no_wrap_delay_step:
     mov [delay_through_step], ax
     test ax, ax
-    jnz .main_loop
-; through:
-
-    call check_space_key
-    ; Check pause state
-    test al, al
-    jnz .paused_action
-
-; otherwise clear paused display, through
-    call clear_paused;
-    call print_adv_scroll
-
-    ; Update color
-    mov al, [adv_color]
-    inc al
-    cmp al, 0x10
-    jb .no_background
-    xor al, al
-.no_background:
-    mov [adv_color], al
-    call print_adv_scroll
+    jnz .delay_step
     jmp .main_loop
 
 .paused_action:
@@ -119,27 +139,6 @@ print_pause_msg:
     int 0x10
     mov si, paused_msg
     call print_string_color
-    ret
-
-; Check for spacebar press, return al is paused
-check_space_key:
-    mov ah, 0x01        ; BIOS check for keystroke
-    int 0x16            ; Keyboard services
-    jz .no_space_key          ; Jump if no key pressed
-    
-    mov ah, 0x00        ; BIOS read keystroke
-    int 0x16            ; Keyboard services
-    
-    cmp al, ' '         ; Compare with space
-    jne .no_space_key         ; If not space, continue
-    
-    ; Toggle pause state
-    mov al, [is_paused]
-    xor al, 1           ; Toggle between 0 and 1
-    mov [is_paused], al
-    ret
-.no_space_key:
-    xor al, al
     ret
 
 print_adv_scroll:
@@ -225,7 +224,7 @@ print_string_color:
     ret
 
 ; Data
-hello_msg db 'Hi, OS!', 0
+hello_msg db 'Hello, world!', 0
 time_str db '00:'
 time_str_min db '00:'
 time_str_sec db '00', 0
@@ -237,7 +236,7 @@ char_at_scroll_pos db 0
 adv_color db 0x0C
 adv_color_step db 0x01
 delay_through_step dw 0x00
-delay_through_max dw 0x1FFF
+delay_through_max dw 0xFFFF
 is_paused db 0          ; 0 = running, 1 = paused
 is_paused_display db 0
 paused_msg db 'Paused'
