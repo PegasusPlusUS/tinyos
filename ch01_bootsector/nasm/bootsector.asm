@@ -22,23 +22,19 @@ start:
     test al, al
     jnz .paused_action
 
+; otherwise clear paused display, through
+    call clear_paused;
 ; Update RTC
     call read_rtc
     call print_rtc
     call print_adv_scroll
-    
+
 ; delay a while and back to .main_loop
 ; delay some cycle then through
     call delay_through
     cmp al, al
     jz .main_loop
 
-    mov al, [is_paused]
-; if paused, toggle paused display and jmp main_loop,
-    jnz .paused_action
-
-; otherwise clear paused display, through
-    call clear_paused;
 
     ; Update color
     mov al, [adv_color]
