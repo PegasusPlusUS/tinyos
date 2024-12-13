@@ -16,11 +16,20 @@ start:
 ; Print hello message at line 1 in yellow
     mov ah, 0x02        ; Set cursor position
     xor bh, bh          ; Page 0
-    mov dh, 0           ; Row 0 (line 1)
-    mov dl, 0           ; Column 0
+    mov dh, [hello_msg_row]           ; Row 0 (line 1)
+    mov dl, [hello_msg_col]           ; Column 0
     int 0x10
-    mov bl, 0x0E        ; Yellow color
+    mov bl, [hello_msg_color]
     mov si, hello_msg
+    call print_string_color
+
+; Print turn on message at line 2 in white
+    mov ah, 0x02        ; Set cursor position
+    mov dh, [turn_on_msg_row]           ; Row 2 (line 3)
+    mov dl, [turn_on_msg_col]           ; Column 0
+    int 0x10
+    mov bl, [turn_on_msg_color]
+    mov si, turn_on_msg
     call print_string_color
 
 .main_loop:
@@ -60,7 +69,7 @@ start:
     jmp .check_result
 
 .no_space_key:
-    xor al, al
+    mov al, [is_paused]
 
 ; Check pause state
 .check_result:
@@ -71,13 +80,13 @@ start:
     call clear_paused;
 
     ; Update color
-    mov al, [adv_color]
+    mov al, [adv_msg_color]
     inc al
     cmp al, 0x10
     jb .no_background
     xor al, al
 .no_background:
-    mov [adv_color], al
+    mov [adv_msg_color], al
     call print_adv_scroll
  
 ; Get time from BIOS RTC
@@ -99,12 +108,12 @@ start:
  
 ; Position cursor for time display at line 3
     mov ah, 0x02        ; Set cursor position
-    mov dh, 2           ; Row 2 (line 3)
-    mov dl, 0           ; Column 0
+    mov dh, [time_str_row]           ; Row 2 (line 3)
+    mov dl, [time_str_col]           ; Column 0
     int 0x10
 
     ; Print the time in white
-    mov bl, 0x0F        ; Bright white color
+    mov bl, [time_str_color]
     mov si, time_str
     call print_string_color
     jmp .main_loop
@@ -124,17 +133,17 @@ flash_paused_display:
     jz clear_paused     ; If is_paused_display is 0, clear the message
 
     ; Display "Paused" message
-    mov bl, 0x0E        ; Yellow color
-    jmp print_pause_msg
+    mov bl, [paused_msg_color]
+    jmp print_pause_msg_color
 
 clear_paused:
 ; Clear the "Paused" message (separate function)
     mov bl, 0x00        ; Black color (clear text)
 
-print_pause_msg:
+print_pause_msg_color:
     mov ah, 0x02        ; Set cursor position
-    mov dh, 2           ; Row 2 (line 3)
-    mov dl, 37          ; Column 37
+    mov dh, [paused_msg_row]           ; Row 2 (line 3)
+    mov dl, [paused_msg_col]           ; Column 37
     int 0x10
     mov si, paused_msg
     call print_string_color
@@ -143,15 +152,15 @@ print_pause_msg:
 print_adv_scroll:
     ; Print adv message with scrolling
     mov ah, 0x02        ; Set cursor position
-    mov dh, 6           ; Row 6 (line 7)
-    mov dl, 0           ; Column 0
+    mov dh, [adv_msg_row]           ; Row 6 (line 7)
+    mov dl, [adv_msg_col]           ; Column 0
     int 0x10
     
-    mov bl, [adv_color]
+    mov bl, [adv_msg_color]
 ; Print from scroll_pos
     mov si, adv_msg
     add si, [scroll_pos]
-; save char at scroll_pos
+    ; save char at scroll_pos
     mov al, byte [si]
     mov [char_at_scroll_pos], al
     call print_string_color
@@ -159,9 +168,10 @@ print_adv_scroll:
     mov si, adv_msg
     add si, [scroll_pos]
     mov byte [si], 0
+    ; print from beginning to scroll_pos
     mov si, adv_msg
     call print_string_color
-; restore char at scroll_pos
+    ; restore char at scroll_pos
     mov si, adv_msg
     add si, [scroll_pos]
     mov al, [char_at_scroll_pos]
@@ -224,22 +234,35 @@ print_string_color:
 
 ; Data
 hello_msg db 'Hello, world!', 0
+hello_msg_row db 0
+hello_msg_col db 0
+hello_msg_color db 0x0E
 time_str db '00:'
 time_str_min db '00:'
 time_str_sec db '00', 0
+time_str_row db 2
+time_str_col db 0
+time_str_color db 0x0F
+turn_on_msg db "It's safe to turn off your box.", 0
+turn_on_msg_row db 4
+turn_on_msg_col db 0
+turn_on_msg_color db 0x0F
 adv_msg db 'TinyOS at https://github.com/pegasusplus/tinyos ', 0
 adv_msg_len dw $ - adv_msg - 1
 ;adv_msg_len equ $ - adv_msg - 1
+adv_msg_row db 6
+adv_msg_col db 0
+adv_msg_color db 0x0C
 scroll_pos dw 0
 char_at_scroll_pos db 0
-adv_color db 0x0C
-adv_color_step db 0x01
 delay_through_step dw 0x00
 delay_through_max dw 0xFFFF
-is_paused db 0          ; 0 = running, 1 = paused
+is_paused db 1          ; 0 = running, 1 = paused
 is_paused_display db 0
 paused_msg db 'Paused'
-
+paused_msg_row db 2
+paused_msg_col db 37
+paused_msg_color db 0x0E
 ; Pad to 510 bytes and add boot signature
 times 510-($-$$) db 0
 dw 0xAA55
