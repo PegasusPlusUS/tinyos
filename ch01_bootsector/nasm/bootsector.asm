@@ -35,7 +35,6 @@ start:
     cmp al, al
     jz .main_loop
 
-
     ; Update color
     mov al, [adv_color]
     inc al
@@ -63,28 +62,22 @@ flash_paused_display:
     jz .clear_paused
 
     ; Display "Paused" message
+    mov bl, 0x0E        ; Yellow color
+.print_paused:
     mov ah, 0x02        ; Set cursor position
     mov dh, 2           ; Row 2 (line 3)
     mov dl, 37          ; Column 9 (after time)
     int 0x10
     mov si, paused_msg
-    mov bl, 0x0E        ; Yellow color
     call print_string_color
     ret
-; ? :
 .clear_paused:
 clear_paused:
     ; Clear "Paused" message
-    mov ah, 0x02        ; Set cursor position
-    mov dh, 2           ; Row 2 (line 3)
-    mov dl, 9           ; Column 9 (after time)
-    int 0x10
-    mov si, paused_msg
     mov bl, 0x00        ; Black color (clear text)
-    call print_string_color
-    ret
+    jmp .print_paused
 
-; Check for spacebar press
+; Check for spacebar press, return al is paused
 check_space_key:
     mov ah, 0x01        ; BIOS check for keystroke
     int 0x16            ; Keyboard services
