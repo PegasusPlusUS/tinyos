@@ -64,8 +64,10 @@ isr_timer:
     mov es, ax
 
     ; Display time
-    call print_time
-
+    call query_and_print_time
+    call print_adv_scroll
+ 
+.done:
     ; Acknowledge the interrupt
     mov al, 0x20
     out 0x20, al
@@ -73,33 +75,10 @@ isr_timer:
     POP_REGISTERS
     iret
 
-print_time:
-; Get time from BIOS RTC
-    mov ah, 0x02        ; BIOS get real time clock
-    int 0x1A            ; Call BIOS time services
-    
-    ; Convert BCD to ASCII and store in time_str
-    mov al, ch          ; Hours
-    call bcd_to_ascii
-    mov [time_str], ax
-    
-    mov al, cl          ; Minutes
-    call bcd_to_ascii
-    mov [time_str_min], ax
-    
-    mov al, dh          ; Seconds
-    call bcd_to_ascii
-    mov [time_str_sec], ax
- 
-; Position cursor for time display at line 3
-    SET_PRINT_POSITION [time_str_row], [time_str_col]
-    SET_PRINT_COLOR [time_str_color]
-    SET_PRINT_STRING time_str
-    call print_string
-    ret
-
 FN_BCD_TO_ASCII
 FN_PRINT_STRING
+FN_PRINT_ADV_SCROLL
+FN_QUERY_AND_PRINT_TIME
 
 ; Data
 
@@ -111,7 +90,6 @@ hello_msg_color db 0x0E
 DATA_TIME_STR
 DATA_SAFE_POWER_OFF
 DATA_ADV
-DATA_PAUSED
 
 times 510-($-$$) db 0
 dw 0xAA55
