@@ -42,6 +42,22 @@
     call print_string
 %endmacro
 
+%macro FN_BCD_TO_ASCII 0
+; Function to convert BCD to ASCII
+; Input: AL = BCD number
+; Output: AX = Two ASCII digits
+bcd_to_ascii:
+    push bx
+    mov bl, al          ; Save original value
+    shr al, 4           ; Get high digit
+    add al, '0'         ; Convert to ASCII
+    mov ah, bl          ; Get low digit
+    and ah, 0x0F        ; Mask off high digit
+    add ah, '0'         ; Convert to ASCII
+    pop bx
+    ret
+%endmacro
+
 %macro FN_PRINT_STRING 0
 ; Input: SI = pointer to string, BL = color attribute
 print_string:

@@ -157,21 +157,7 @@ print_adv_scroll:
     mov [scroll_pos], ax
     ret
 
-; Function to convert BCD to ASCII
-; Input: AL = BCD number
-; Output: AX = Two ASCII digits
-bcd_to_ascii:
-    push bx
-    mov bl, al          ; Save original value
-    shr al, 4           ; Get high digit
-    add al, '0'         ; Convert to ASCII
-    mov ah, bl          ; Get low digit
-    and ah, 0x0F        ; Mask off high digit
-    add ah, '0'         ; Convert to ASCII
-    pop bx
-    ret
-
-; Function to print colored string
+FN_BCD_TO_ASCII
 FN_PRINT_STRING
 
 ; Data

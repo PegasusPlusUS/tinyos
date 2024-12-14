@@ -7,8 +7,6 @@ start:
     INIT_SEGMENTS
     CLEAR_SCREEN
 
-    PRINT_STRING_COLOR 0, 0, [hello_msg_color], hello_msg
-
     cli                     ; Disable interrupts
 
     ; Set up the stack
@@ -31,9 +29,6 @@ start:
 
     ; Enable interrupts
     sti
-
-    ; Initialize the number to display
-    mov word [number], 0
 
     ; Infinite loop
 loop:
@@ -58,11 +53,8 @@ idt_end:
 isr_timer:
     pusha
 
-    ; Increment the number
-    inc word [number]
-
-    ; Display the number
-    call display_number
+    ; Display time
+    call print_time
 
     ; Acknowledge the interrupt
     mov al, 0x20
@@ -71,41 +63,41 @@ isr_timer:
     popa
     iret
 
-; Display the number
-display_number:
-    mov ax, [number]
-    call print_number
+print_time:
+; Get time from BIOS RTC
+    mov ah, 0x02        ; BIOS get real time clock
+    int 0x1A            ; Call BIOS time services
+    
+    ; Convert BCD to ASCII and store in time_str
+    mov al, ch          ; Hours
+    call bcd_to_ascii
+    mov [time_str], ax
+    
+    mov al, cl          ; Minutes
+    call bcd_to_ascii
+    mov [time_str_min], ax
+    
+    mov al, dh          ; Seconds
+    call bcd_to_ascii
+    mov [time_str_sec], ax
+ 
+; Position cursor for time display at line 3
+    SET_PRINT_POSITION [time_str_row], [time_str_col]
+    SET_PRINT_COLOR [time_str_color]
+    SET_PRINT_STRING time_str
+    call print_string
     ret
 
-; Print the number
-print_number:
-    ; Convert number to string and print
-    mov bx, 10
-    xor cx, cx
-
-convert_loop:
-    xor dx, dx
-    div bx
-    add dl, '0'
-    push dx
-    inc cx
-    test ax, ax
-    jnz convert_loop
-
-print_loop:
-    pop ax
-    mov ah, 0x0E
-    int 0x10
-    loop print_loop
-
-    ret
-
+FN_BCD_TO_ASCII
 FN_PRINT_STRING
 
 ; Data
-hello_msg db "Hello, timer driven world!", 0
-hello_msg_color db 0x07
-number dw 0
+time_str db '00:'
+time_str_min db '00:'
+time_str_sec db '00', 0
+time_str_row db 3
+time_str_col db 0
+time_str_color db 0x07
 
 times 510-($-$$) db 0
 dw 0xAA55
