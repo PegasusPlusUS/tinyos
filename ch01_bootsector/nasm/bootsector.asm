@@ -1,36 +1,14 @@
 [org 0x7c00]            ; Tell NASM where this code will be loaded
 [bits 16]               ; We're working in 16-bit real mode
 
+%include "common.asm"
+
 start:
-    ; Set up segments
-    xor ax, ax          ; Clear AX
-    mov ds, ax          ; Set DS=0
-    mov es, ax          ; Set ES=0
-    mov ss, ax          ; Set SS=0
-    mov sp, 0x7C00      ; Set stack pointer just below where we're loaded
+    INIT_SEGMENTS
+    CLEAR_SCREEN
 
-    ; Clear screen
-    mov ax, 0x0003      ; Text mode 80x25, 16 colors
-    int 0x10            ; BIOS video interrupt
-
-; Print hello message at line 1 in yellow
-    mov ah, 0x02        ; Set cursor position
-    xor bh, bh          ; Page 0
-    mov dh, [hello_msg_row]           ; Row 0 (line 1)
-    mov dl, [hello_msg_col]           ; Column 0
-    int 0x10
-    mov bl, [hello_msg_color]
-    mov si, hello_msg
-    call print_string_color
-
-; Print turn on message at line 2 in white
-    mov ah, 0x02        ; Set cursor position
-    mov dh, [turn_on_msg_row]           ; Row 2 (line 3)
-    mov dl, [turn_on_msg_col]           ; Column 0
-    int 0x10
-    mov bl, [turn_on_msg_color]
-    mov si, turn_on_msg
-    call print_string_color
+    PRINT_STRING_COLOR 0, 0, [hello_msg_color], hello_msg
+    PRINT_STRING_COLOR 4, 0, [turn_on_msg_color], turn_on_msg
 
 .main_loop:
 ; delay a while
@@ -115,7 +93,7 @@ start:
     ; Print the time in white
     mov bl, [time_str_color]
     mov si, time_str
-    call print_string_color
+    call print_string
     jmp .main_loop
 
 .paused_action:
@@ -133,21 +111,14 @@ flash_paused_display:
     jz clear_paused     ; If is_paused_display is 0, clear the message
 
     ; Display "Paused" message
-    mov bl, [paused_msg_color]
-    jmp print_pause_msg_color
+    SET_PRINT_COLOR [paused_msg_color]
+    jmp print_pause_msg_pos
 
 clear_paused:
 ; Clear the "Paused" message (separate function)
-    mov bl, 0x00        ; Black color (clear text)
-
-print_pause_msg_color:
-    mov ah, 0x02        ; Set cursor position
-    mov dh, [paused_msg_row]           ; Row 2 (line 3)
-    mov dl, [paused_msg_col]           ; Column 37
-    int 0x10
-    mov si, paused_msg
-    call print_string_color
-    ret
+    SET_PRINT_COLOR 0x00        ; Black color (clear text)
+print_pause_msg_pos:
+    PRINT_STRING_POS [paused_msg_row], [paused_msg_col], paused_msg
 
 print_adv_scroll:
     ; Print adv message with scrolling
@@ -163,14 +134,14 @@ print_adv_scroll:
     ; save char at scroll_pos
     mov al, byte [si]
     mov [char_at_scroll_pos], al
-    call print_string_color
+    call print_string
 ; Continue print from beginning to scroll_pos
     mov si, adv_msg
     add si, [scroll_pos]
     mov byte [si], 0
     ; print from beginning to scroll_pos
     mov si, adv_msg
-    call print_string_color
+    call print_string
     ; restore char at scroll_pos
     mov si, adv_msg
     add si, [scroll_pos]
@@ -201,36 +172,7 @@ bcd_to_ascii:
     ret
 
 ; Function to print colored string
-; Input: SI = pointer to string, BL = color attribute
-print_string_color:
-    push ax
-    push bx
-    push cx
-.loop:
-    lodsb               ; Load next character
-    test al, al         ; Check for null terminator
-    jz .done
-    mov ah, 0x09        ; BIOS write character and attribute
-    mov cx, 1           ; Print one character
-    push bx
-    mov bh, 0           ; Page number
-    int 0x10
-    pop bx
-    
-    ; Move cursor forward
-    mov ah, 0x03        ; Get cursor position
-    mov bh, 0
-    int 0x10
-    inc dl              ; Increment column
-    mov ah, 0x02        ; Set cursor position
-    int 0x10
-    
-    jmp .loop
-.done:
-    pop cx
-    pop bx
-    pop ax
-    ret
+FN_PRINT_STRING
 
 ; Data
 hello_msg db 'Hello, world!', 0
@@ -259,7 +201,7 @@ delay_through_step dw 0x00
 delay_through_max dw 0xFFFF
 is_paused db 1          ; 0 = running, 1 = paused
 is_paused_display db 0
-paused_msg db 'Paused'
+paused_msg db 'Paused', 0
 paused_msg_row db 2
 paused_msg_col db 37
 paused_msg_color db 0x0E
