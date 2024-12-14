@@ -99,3 +99,38 @@ print_string:
     call print_string
 %endmacro
 
+%macro DATA_TIME_STR 0
+time_str db '00:'
+time_str_min db '00:'
+time_str_sec db '00', 0
+time_str_row db 2
+time_str_col db 0
+time_str_color db 0x0F
+%endmacro
+
+%macro DATA_SAFE_POWER_OFF 0
+turn_on_msg db "It's safe to turn off your box.", 0
+turn_on_msg_row db 4
+turn_on_msg_col db 0
+turn_on_msg_color db 0x0F
+%endmacro
+
+%macro DATA_ADV 0
+adv_msg db 'TinyOS at https://github.com/pegasusplus/tinyos ', 0
+adv_msg_len dw $ - adv_msg - 1
+;adv_msg_len equ $ - adv_msg - 1
+adv_msg_row db 6
+adv_msg_col db 0
+adv_msg_color db 0x0C
+scroll_pos dw 0
+char_at_scroll_pos db 0
+%endmacro
+
+%macro DATA_PAUSED 0
+is_paused db 1          ; 0 = running, 1 = paused
+is_paused_display db 0
+paused_msg db 'Paused', 0
+paused_msg_row db 2
+paused_msg_col db 37
+paused_msg_color db 0x0E
+%endmacro
