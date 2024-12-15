@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 flate2 = "1.0.25"
+nix = "0.26.2"  # or whatever the latest version is

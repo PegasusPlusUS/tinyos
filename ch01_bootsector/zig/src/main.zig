@@ -17,7 +17,7 @@ const Time = struct {
     seconds: u8,
 };
 
-pub fn main() noreturn {
+pub fn _start() noreturn {
     // Set up segments
     asm volatile (
         \\.code16

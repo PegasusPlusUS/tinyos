@@ -1,18 +1,54 @@
 use std::env;
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
-use std::os::windows::fs::OpenOptionsExt; // Needed for named pipes on Windows
-use flate2::{Compression, write::ZlibEncoder, read::ZlibDecoder};
+use flate2::write::ZlibEncoder;
+use flate2::read::ZlibDecoder;
+use flate2::Compression;
+
+#[cfg(windows)]
+use std::os::windows::fs::OpenOptionsExt;
+
+#[allow(unused_imports)]
+use std::os::unix::fs::OpenOptionsExt;
 
 const BUFFER_SIZE: usize = 512;
 
+#[cfg(unix)]
+fn ensure_pipe_exists(pipe_name: &str) -> std::io::Result<()> {
+    use std::os::unix::fs::FileTypeExt;
+    if let Ok(metadata) = std::fs::metadata(pipe_name) {
+        if metadata.file_type().is_fifo() {
+            return Ok(());
+        }
+    }
+    use nix::unistd::mkfifo;
+    use nix::sys::stat::Mode;
+    mkfifo(pipe_name, Mode::S_IRWXU).map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+    Ok(())
+}
+
 fn write_mode(pipe_name: &str, output_file: &str) -> std::io::Result<()> {
+    #[cfg(unix)]
+    ensure_pipe_exists(pipe_name)?;
+
     // Open the named pipe for reading
-    let mut pipe = OpenOptions::new()
-        .read(true)
-        .write(false)
-        .custom_flags(0x40000000) // FILE_FLAG_FIRST_PIPE_INSTANCE
-        .open(pipe_name)?;
+    let mut pipe = {
+        #[cfg(windows)]
+        {
+            OpenOptions::new()
+                .read(true)
+                .write(false)
+                .custom_flags(0x40000000) // FILE_FLAG_FIRST_PIPE_INSTANCE
+                .open(pipe_name)?
+        }
+        #[cfg(unix)]
+        {
+            OpenOptions::new()
+                .read(true)
+                .write(false)
+                .open(pipe_name)?
+        }
+    };
 
     let mut buffer = [0u8; BUFFER_SIZE];
     pipe.read_exact(&mut buffer)?; // Read 512 bytes from the pipe
@@ -44,11 +80,23 @@ fn read_mode(input_file: &str, pipe_name: &str) -> std::io::Result<()> {
     decoder.read_exact(&mut buffer)?;
 
     // Write the decompressed data to the named pipe
-    let mut pipe = OpenOptions::new()
-        .read(false)
-        .write(true)
-        .custom_flags(0x40000000) // FILE_FLAG_FIRST_PIPE_INSTANCE
-        .open(pipe_name)?;
+    let mut pipe = {
+        #[cfg(windows)]
+        {
+            OpenOptions::new()
+                .read(false)
+                .write(true)
+                .custom_flags(0x40000000)
+                .open(pipe_name)?
+        }
+        #[cfg(unix)]
+        {
+            OpenOptions::new()
+                .read(false)
+                .write(true)
+                .open(pipe_name)?
+        }
+    };
 
     pipe.write_all(&buffer)?;
     println!("Data decompressed and written to the pipe");
