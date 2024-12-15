@@ -1,4 +1,4 @@
-nasm/bootsector.bin : nasm/bootsector.asm
+nasm/bootsector.bin : nasm/bootsector.asm nasm/common.asm ../ch01_bootsector/nasm/common.asm ../ch01_bootsector/nasm/bootsector.asm
 	cd nasm && make
 
 ../ch01_bootsector/.pipe/pb_holder/target/release/pb_holder : ../ch01_bootsector/.pipe/pb_holder/Cargo.toml
