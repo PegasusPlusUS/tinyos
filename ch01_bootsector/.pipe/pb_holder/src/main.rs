@@ -9,6 +9,7 @@ use flate2::Compression;
 use std::os::windows::fs::OpenOptionsExt;
 
 #[allow(unused_imports)]
+#[cfg(unix)]
 use std::os::unix::fs::OpenOptionsExt;
 
 const BUFFER_SIZE: usize = 512;
