@@ -23,7 +23,8 @@ struct Time {
 }
 
 #[no_mangle]
-#[link_section = ".start"]
+#[cfg_attr(target_os = "macos", link_section = "__TEXT,.start")]
+#[cfg_attr(not(target_os = "macos"), link_section = ".start")]
 pub extern "C" fn main() -> ! {
     // Set up segments
     unsafe {

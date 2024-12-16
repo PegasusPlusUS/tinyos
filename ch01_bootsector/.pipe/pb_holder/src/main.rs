@@ -1,8 +1,16 @@
 use std::env;
 use std::fs::{File, OpenOptions};
 use std::io::{Read, Write};
-use std::os::windows::fs::OpenOptionsExt; // Needed for named pipes on Windows
-use flate2::{Compression, write::ZlibEncoder, read::ZlibDecoder};
+use flate2::write::ZlibEncoder;
+use flate2::read::ZlibDecoder;
+use flate2::Compression;
+
+#[cfg(windows)]
+use std::os::windows::fs::OpenOptionsExt;
+
+#[allow(unused_imports)]
+#[cfg(unix)]
+use std::os::unix::fs::OpenOptionsExt;
 
 use clap::{Parser, Subcommand};
 
