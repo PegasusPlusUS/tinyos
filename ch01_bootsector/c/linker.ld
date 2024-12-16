@@ -1,25 +1,17 @@
-SECTIONS
-{
-    . = 0x7C00;
+/* linker.ld */
+SECTIONS {
+    . = 0x7C00;                 /* Start address of the bootloader */
     .text : {
-        *(.text*)
+        *(.text*)               /* Include all .text sections */
     }
     .rodata : {
-        *(.rodata*)
+        *(.rodata*)             /* Include all .rodata sections */
     }
-    .data : {
-        *(.data*)
+    .bss : {
+        *(.bss*)                /* Include all .bss sections */
     }
+    . = 0x7DFE;                 /* Ensure boot signature is at the end */
     .boot_signature : {
         *(.boot_signature)
-    }
-    . = 0x7C00 + 510;
-    .fill : {
-        BYTE(0)
-        BYTE(0xAA55)
-    }
-    /DISCARD/ : {
-        *(.note*)
-        *(.comment*)
     }
 }
