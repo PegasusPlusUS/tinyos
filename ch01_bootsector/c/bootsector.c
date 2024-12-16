@@ -163,6 +163,3 @@ void __attribute__((section(".text.boot"))) _start(void)
     while(1);
 }
 
-// Boot signature
-__asm__(".section .boot_signature\n"
-        ".byte 0x55, 0xAA\n");
