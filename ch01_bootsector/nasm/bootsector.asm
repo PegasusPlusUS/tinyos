@@ -80,7 +80,7 @@ FN_PRINT_STRING
 FN_QUERY_AND_PRINT_TIME
 
 ; Data
-hello_msg db 'Hello, world!', 0
+hello_msg db 'Hello, bootgsector in ASM!', 0
 hello_msg_row db 0
 hello_msg_col db 0
 hello_msg_color db 0x0E

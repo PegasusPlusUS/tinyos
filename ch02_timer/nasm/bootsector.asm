@@ -28,23 +28,8 @@ start:
     mov al, 0x01           ; 8086 mode
     out 0x21, al
 
-    ; Set up the timer interrupt (IRQ0)
-    mov al, 0x36           ; Channel 0, square wave mode
-    out 0x43, al
-    mov ax, 0x4E20         ; 1 second interval (0x4E20 = 20000 in decimal)
-    out 0x40, al
-    mov al, ah
-    out 0x40, al
-
-    ; Set up ISR for IRQ0
-    xor ax, ax
-    mov es, ax
-    mov word [es:0x20*4], isr_timer    ; Offset
-    mov word [es:0x20*4+2], 0          ; Segment
-
-    ; Enable only timer interrupt
-    mov al, 0xFE           ; Enable IRQ0 only
-    out 0x21, al
+    SETUP_TIMER_INTERRUPT isr_timer
+    ENABLE_TIMER_INTERRUPT_ONLY
 
     ; Enable interrupts
     sti
@@ -55,9 +40,7 @@ loop:
     jmp loop
 
 ; Timer Interrupt Service Routine (ISR)
-isr_timer:
-    PUSH_REGISTERS
-
+BEGIN_ISR_TIMER _isr_timer
     ; Set up data segment
     mov ax, cs
     mov ds, ax
@@ -68,12 +51,9 @@ isr_timer:
     call print_adv_scroll
  
 .done:
-    ; Acknowledge the interrupt
-    mov al, 0x20
-    out 0x20, al
+    ACK_ISR
+END_ISR_TIMER
 
-    POP_REGISTERS
-    iret
 
 FN_BCD_TO_ASCII
 FN_PRINT_STRING

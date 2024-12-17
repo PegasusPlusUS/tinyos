@@ -1,17 +1,15 @@
-/* linker.ld */
-SECTIONS {
-    . = 0x7C00;                 /* Start address of the bootloader */
+SECTIONS
+{
+    . = 0x7C00;
     .text : {
-        *(.text*)               /* Include all .text sections */
+        *(.text.boot)   /* Boot code first */
+        *(.text)        /* Then other code */
+        *(.rodata)      /* Read-only data (strings) */
+        *(.data)        /* Initialized data */
+        *(.bss)         /* Uninitialized data */
     }
-    .rodata : {
-        *(.rodata*)             /* Include all .rodata sections */
-    }
-    .bss : {
-        *(.bss*)                /* Include all .bss sections */
-    }
-    . = 0x7DFE;                 /* Ensure boot signature is at the end */
-    .boot_signature : {
-        *(.boot_signature)
+    . = 0x7C00 + 510;   /* Position for boot signature */
+    .signature : {
+        SHORT(0xAA55)   /* Boot signature */
     }
 }

@@ -1,34 +1,184 @@
-// bootsector.c
-char *video_memory = (char *)0xB8000;  // Start of video memory
-const int screen_size = 80 * 25;            // Total number of characters on the screen
+// gcc -ffreestanding -m16 -c bootsector.c -o bootsector.o
+#pragma GCC optimize("O0")
 
-void clear_screen() {
-    for (int i = 0; i < screen_size; i++) {
-        video_memory[i * 2] = ' ';   // Write a space character
-        video_memory[i * 2 + 1] = 0x07; // Attribute: White text on black
-    }
-}
+__asm__(".code16\n");           // Changed from .code16gcc to .code16
+__asm__(".global _start\n");    // Add this line
+__asm__("_start:\n");          // Add this line
+__asm__("jmp $0x0000, $main\n");  // Modified jump instruction
 
-__attribute__((naked)) void _start() {
-    __asm__(
-        "cli\n"                    // Disable interrupts
-        "xor %%ax, %%ax\n"         // Zero AX
-        "mov %%ax, %%ds\n"         // Set DS to zero
-        "mov %%ax, %%es\n"         // Set ES to zero
-        "mov $0x7C00, %%sp\n"      // Set stack pointer to 0x7C00
+// Time get_rtc_time(void);
+// void print_time_at(Time time, char row, char col, char color);
 
-        // Call the C function to clear the screen
-        "call clear_screen\n"
+// Colors
+enum {
+    COLOR_WHITE = 0x0F,
+    COLOR_YELLOW = 0x0E,
+    COLOR_BLUE = 0x0C,
+    COLOR_GREEN = 0x0A,
+};
 
-        // Halt the CPU
-        "hang:\n"
-        "hlt\n"
-        "jmp hang\n"
-        :
-        :
-        : "ax"
+// It's EXTREMELY HARD to REALIABLE pass param to 16bit inline asm (GPT said and many AI struggled and failed)
+// So we choose using shared data to pass params. EVEN C code function param passing is not working!!!!!! So
+// we have to use macro
+volatile char _asm_char_1_ = 0;
+volatile char _asm_char_2_ = 0;
+volatile char _asm_color_ = COLOR_YELLOW;
+
+// Messages
+const char* HELLO_MSG = "Hello, bootsector in ASM and C!";
+char* ADV_MSG = "TinyOS is an open source tutorial at https://github.com/pegasusplus/tinyos";
+short _scroll_pos_ = 0;
+volatile const char* _asm_msg_;
+
+#define SET_PRINT_COLOR(color) \
+    do {    \
+        _asm_color_ = color;    \
+    } while(0)
+
+void asm_set_cursor_position() {
+    __asm__ volatile (
+        "movb $0x02, %%ah\n\t"          /* Set cursor position */
+        "movb $0, %%bh\n\t"             /* Page number = 0 */
+        "movb _asm_char_1_, %%dh\n\t"   /* Row (input parameter 1) */
+        "movb _asm_char_2_, %%dl\n\t"   /* Column (input parameter 2) */
+        "int $0x10\n\t"                 /* BIOS interrupt 0x10 */
+        :                               /* No outputs */
+        :                               /* Inputs: row -> %0, col -> %1 */
+        : "ah", "dh", "dl"//, "bh"        /* Clobbered registers */
     );
 }
 
-// Ensure the boot sector is 512 bytes with a boot signature
-__attribute__((section(".boot_signature"))) const unsigned char boot_signature[2] = {0x55, 0xAA};
+// Poor function param passing in bare-metal mode
+//void set_cursor_position(short row, short col) {
+#define SET_CURSOR_POS(row, col) \
+    do { \
+        _asm_char_1_ = row; \
+        _asm_char_2_ = col; \
+\
+        asm_set_cursor_position(); \
+    } while (0)
+
+// put ch in _asm_char_ and color in _asm_color_
+void asm_print_char() {
+    __asm__ volatile (
+        // Prolog
+        "push %%ax\n\t"          // Save AX
+        "push %%bx\n\t"          // Save BX
+        "push %%cx\n\t"          // Save CX
+
+        "movb _asm_char_1_, %%al\n\t"    // Load ch
+        "movb _asm_color_, %%bl\n\t"   // Yellow color into BL
+        "movb $0x09, %%ah\n\t"   // BIOS write character function
+        "movw $1, %%cx\n\t"      // Print one character
+        "int $0x10\n\t"          // Call BIOS interrupt
+
+        // Epilogue: Restore registers
+        "pop %%cx\n\t"           // Restore CX
+        "pop %%bx\n\t"           // Restore BX
+        "pop %%ax\n\t"           // Restore AX
+        :
+        :
+        : "ax", "bx", "cx", "dl", "bh", "dh", "si", "memory"       // Clobbered registers
+    );
+}
+
+#define PRINT_CHAR(ch) \
+    do {    \
+        _asm_char_1_ = ch;  \
+        asm_print_char();   \
+    }  while(0)
+
+#define PRINT_STRING(msg)   \
+    do {    \
+        _asm_msg_ = msg;    \
+        asm_print_string(); \
+    } while(0)
+
+void asm_print_string() {
+    __asm__ volatile (
+        // Prologue: Save registers
+        // "push %%ax\n\t"          // Save AX
+        // "push %%bx\n\t"          // Save BX
+        // "push %%cx\n\t"          // Save CX
+
+        "mov [_asm_msg_], %%si\n\t"
+        "movb _asm_color_, %%bl\n\t"  //
+    ".loop:\n\t"
+        // Load next character
+        "lodsb\n\t"              // Load next byte from [ESI] into AL (address of str pointed by ESI)
+        "test %%al, %%al\n\t"    // Test AL (check for null terminator)
+        "jz .done\n\t"           // Jump to done if AL is 0 (null terminator)
+        
+        // Print character (BIOS 0x09 teletype function)
+        "movb $0x09, %%ah\n\t"   // BIOS teletype (character + attribute)
+        "movw $1, %%cx\n\t"      // Print 1 character
+        "push %%bx\n\t"          // Save BX
+        "movb $0, %%bh\n\t"      // Page number 0
+        "int $0x10\n\t"          // Call BIOS interrupt
+        
+        "pop %%bx\n\t"           // Restore BX
+        
+        // Move cursor forward
+        "movb $0x03, %%ah\n\t"   // BIOS get cursor position
+        "movb $0, %%bh\n\t"      // Page number 0
+        "int $0x10\n\t"          // Call BIOS interrupt to get cursor position
+        
+        "inc %%dl\n\t"           // Increment column (move cursor forward)
+        "movb $0x02, %%ah\n\t"   // BIOS set cursor position
+        "int $0x10\n\t"          // Call BIOS interrupt to set cursor position
+        
+        "jmp .loop\n\t"          // Repeat loop
+        
+    ".done:\n\t"
+        // Epilogue: Restore registers
+        // "pop %%cx\n\t"           // Restore CX
+        // "pop %%bx\n\t"           // Restore BX
+        // "pop %%ax\n\t"           // Restore AX
+        :
+        :
+        : "ah", "dl", "cx", "si", "memory", "bh"//, "bl" // Clobbered registers
+    );
+}
+
+void asm_clear_screen() {
+    __asm__ volatile (
+        "mov $0x0003, %ax\n"
+        "int $0x10\n" // Clear screen
+    );
+}
+
+void print_adv_msg_scroll() {
+    PRINT_STRING(ADV_MSG + _scroll_pos_);
+    char temp = ADV_MSG[_scroll_pos_];
+    ADV_MSG[_scroll_pos_] = 0;
+    PRINT_STRING(ADV_MSG);
+    ADV_MSG[_scroll_pos_] = temp;
+    if (++_scroll_pos_ >= sizeof(ADV_MSG)) {
+        _scroll_pos_ = 0;
+    }
+}
+
+void __attribute__((noreturn)) __attribute__((no_instrument_function)) main(void) {
+    // Set up segments
+    __asm__ volatile (
+        "xor %ax, %ax\n"
+        "mov %ax, %ds\n"
+        "mov %ax, %es\n"
+        "mov %ax, %ss\n"
+        "mov $0x7C00, %sp\n"
+    );
+
+    asm_clear_screen();
+
+    PRINT_STRING(HELLO_MSG);
+    SET_CURSOR_POS(10, 0);
+    SET_PRINT_COLOR(COLOR_GREEN);
+    print_adv_msg_scroll();
+
+    while (1) {
+        __asm__ volatile ("nop");
+    }
+}
+
+__asm__(".section .boot_signature\n"
+        ".byte 0x55, 0xAA\n");

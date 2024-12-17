@@ -142,7 +142,7 @@ fn f2p_mode(file: &mut File, pipe: &mut File) -> std::io::Result<()> {
 fn print_usage() {
     let args: Vec<String> = env::args().collect();
 
-    let executable_base_name = args[0].split("/\\").last().unwrap();
+    let executable_base_name = args[0].split(&['/', '\\'][..]).last().unwrap();
     eprintln!("Usage:");
     eprintln!("1. {} mkpipe <pipe_name>", executable_base_name);
     eprintln!("     Create pipe, then compiler write to pipe, zipper read from pipe,");

@@ -1,25 +1,43 @@
 .PONEY : build run clean
 
-bootsector.o : bootsector.c
-	x86_64-elf-gcc -ffreestanding -nostdlib -c bootsector.c -o bootsector.o
+CC = i686-elf-gcc
+CFLAGS = -m16 -ffreestanding -fno-pie \
+         -nostdlib -nostdinc -fno-asynchronous-unwind-tables \
+         -fno-builtin -fno-stack-protector -mno-mmx -mno-sse \
+		 -fno-inline -O0
+         
+bootsector.o: bootsector.c
+	$(CC) $(CFLAGS) -c bootsector.c -o bootsector.o
 
-bootsector.bin : bootsector.o linker.ld
-	../.pipe/pb_holder/target/release/pb_holder.exe p2f tinyos_bootsector_holder bootsector.pz
-	#x86_64-elf-ld -T linker.ld --oformat binary -s -o bootsector.bin bootsector.o 	
-	x86_64-elf-ld -T linker.ld --oformat binary -s -o \\\\.\\pipe\\tinyosbootsector bootsector.o 	
+bootsector.bin: bootsector.o
+	i686-elf-ld -T linker.ld -o bootsector.elf bootsector.o
+	i686-elf-objcopy -O binary bootsector.elf bootsector.bin
 
 build: bootsector.bin
 
-../.pipe/pb_holder/target/release/pb_holder.exe : ../.pipe/pb_holder/src/main.rs
-	cd ../.pipe/pb_holder && cargo b --release
+clean:
+	rm -f *.o *.bin *.elf
+
+# bootsector.o : bootsector.c
+# 	x86_64-elf-gcc -ffreestanding -nostdlib -nostdinc -fno-asynchronous-unwind-tables -c bootsector.c -o bootsector.o
+
+# bootsector.bin : bootsector.o linker.ld
+# 	../.pipe/pb_holder/target/release/pb_holder.exe p2f tinyos_bootsector_holder bootsector.pz
+# 	#x86_64-elf-ld -T linker.ld --oformat binary -s -o bootsector.bin bootsector.o 	
+# 	x86_64-elf-ld -T linker.ld --oformat binary -s -o \\\\.\\pipe\\tinyosbootsector bootsector.o 	
+
+# build: bootsector.bin
+
+# ../.pipe/pb_holder/target/release/pb_holder.exe : ../.pipe/pb_holder/src/main.rs
+# 	cd ../.pipe/pb_holder && cargo b --release
 
 pb_holder: ../.pipe/pb_holder/target/release/pb_holder.exe
 
 run: build pb_holder
-	../.pipe/pb_holder/target/release/pb_holder.exe f2p bootsector.pz tinyos_bootsector_provider
-	echo "run bochs to load bootsector.bin as disk image for boot device"
-	#qemu-system-x86_64 -drive file=bootsector.bin,format=raw
-	qemu-system-x86_64 -drive file=\\\\.\\pipe\\tinyos_bootsector_provider,format=raw
+	#../.pipe/pb_holder/target/release/pb_holder.exe f2p bootsector.pz tinyos_bootsector_provider
+	echo "run qemu load bootsector.bin as disk image for boot device"
+	qemu-system-x86_64 -drive file=bootsector.bin,format=raw
+	#qemu-system-x86_64 -drive file=\\\\.\\pipe\\tinyos_bootsector_provider,format=raw
 
-clean:
-	rm bootsector.o bootsector.bin
+# clean:
+# 	rm bootsector.o bootsector.bin
