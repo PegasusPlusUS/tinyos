@@ -31,9 +31,9 @@ clean:
 # ../.pipe/pb_holder/target/release/pb_holder.exe : ../.pipe/pb_holder/src/main.rs
 # 	cd ../.pipe/pb_holder && cargo b --release
 
-pb_holder: ../.pipe/pb_holder/target/release/pb_holder.exe
+#pb_holder: ../.pipe/pb_holder/target/release/pb_holder.exe
 
-run: build pb_holder
+run: build
 	#../.pipe/pb_holder/target/release/pb_holder.exe f2p bootsector.pz tinyos_bootsector_provider
 	echo "run qemu load bootsector.bin as disk image for boot device"
 	qemu-system-x86_64 -drive file=bootsector.bin,format=raw

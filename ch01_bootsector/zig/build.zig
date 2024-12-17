@@ -1,5 +1,3 @@
-const std = @import("std");
-
 // Although this function looks imperative, note that its job is to
 // declaratively construct a build graph that will be executed by an external
 // runner.
@@ -97,3 +95,5 @@ pub fn build(b: *std.Build) void {
     test_step.dependOn(&run_lib_unit_tests.step);
     test_step.dependOn(&run_exe_unit_tests.step);
 }
+
+@export(boot_signature, .{ .section = "__DATA,boot_signature" })

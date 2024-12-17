@@ -25,7 +25,7 @@ volatile char _asm_char_2_ = 0;
 volatile char _asm_color_ = COLOR_YELLOW;
 
 // Messages
-const char* HELLO_MSG = "Hello, bootsector in ASM and C!";
+const char* HELLO_MSG = "Hello, bootsector in ASM and C by i686-elf-gcc!";
 char* ADV_MSG = "TinyOS is an open source tutorial at https://github.com/pegasusplus/tinyos";
 short _scroll_pos_ = 0;
 volatile const char* _asm_msg_;
