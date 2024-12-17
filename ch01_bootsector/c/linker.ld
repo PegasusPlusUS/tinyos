@@ -2,24 +2,14 @@ SECTIONS
 {
     . = 0x7C00;
     .text : {
-        *(.text*)
+        *(.text.boot)   /* Boot code first */
+        *(.text)        /* Then other code */
+        *(.rodata)      /* Read-only data (strings) */
+        *(.data)        /* Initialized data */
+        *(.bss)         /* Uninitialized data */
     }
-    .rodata : {
-        *(.rodata*)
-    }
-    .data : {
-        *(.data*)
-    }
-    .boot_signature : {
-        *(.boot_signature)
-    }
-    . = 0x7C00 + 510;
-    .fill : {
-        BYTE(0)
-        BYTE(0xAA55)
-    }
-    /DISCARD/ : {
-        *(.note*)
-        *(.comment*)
+    . = 0x7C00 + 510;   /* Position for boot signature */
+    .signature : {
+        SHORT(0xAA55)   /* Boot signature */
     }
 }

@@ -1,7 +1,11 @@
-__asm__(".code16\n");           // Changed from .code16gcc to .code16
-__asm__(".global _start\n");    // Add this line
-__asm__("_start:\n");          // Add this line
-__asm__("jmp $0x0000, $main\n");  // Modified jump instruction
+__asm__(".code16\n");
+__asm__(".global _start\n");
+
+void __attribute__((section(".text.boot"))) _start(void) {
+    __asm__ volatile (
+        "jmp main\n"
+    );
+}
 
 #define VIDEO_INT   0x10
 #define TIMER_INT   0x1A
