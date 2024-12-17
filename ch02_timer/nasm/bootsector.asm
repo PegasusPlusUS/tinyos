@@ -28,7 +28,7 @@ start:
     mov al, 0x01           ; 8086 mode
     out 0x21, al
 
-    SETUP_TIMER_INTERRUPT isr_timer
+    SETUP_TIMER_INTERRUPT _isr_timer
     ENABLE_TIMER_INTERRUPT_ONLY
 
     ; Enable interrupts
@@ -47,9 +47,10 @@ BEGIN_ISR_TIMER _isr_timer
     mov es, ax
 
     ; Display time
-    call query_and_print_time
-    call print_adv_scroll
- 
+    CALL_INC_MICRO_SEC_AND_TO_ASCII
+    CALL_QUERY_AND_PRINT_TIME
+    ;CALL_PRINT_ADV_SCROLL
+
 .done:
     ACK_ISR
 END_ISR_TIMER
@@ -57,19 +58,20 @@ END_ISR_TIMER
 
 FN_BCD_TO_ASCII
 FN_PRINT_STRING
-FN_PRINT_ADV_SCROLL
+;FN_PRINT_ADV_SCROLL
+FN_INC_MICRO_SEC_AND_TO_ASCII
 FN_QUERY_AND_PRINT_TIME
 
 ; Data
 
-hello_msg db 'Hello, timer driving world!', 0
+hello_msg db 'Hello, bootsector by ASM in timer driving world!', 0
 hello_msg_row db 0
 hello_msg_col db 0
 hello_msg_color db 0x0E
 
-DATA_TIME_STR
+DATA_TIME_STR_HR
 DATA_SAFE_POWER_OFF
-DATA_ADV
+;DATA_ADV
 
 times 510-($-$$) db 0
 dw 0xAA55

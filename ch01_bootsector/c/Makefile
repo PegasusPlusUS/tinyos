@@ -3,15 +3,16 @@
 CC = i686-elf-gcc
 CFLAGS = -m16 -ffreestanding -fno-pie \
          -nostdlib -nostdinc -fno-asynchronous-unwind-tables \
-         -fno-builtin -fno-stack-protector -mno-mmx -mno-sse \
-		 -fno-inline -O0
+         -fno-builtin -fno-stack-protector -mno-mmx -mno-sse
+#		 -fno-inline -O0
          
 bootsector.o: bootsector.c
 	$(CC) $(CFLAGS) -c bootsector.c -o bootsector.o
 
 bootsector.bin: bootsector.o
-	i686-elf-ld -T linker.ld -o bootsector.elf bootsector.o
-	i686-elf-objcopy -O binary bootsector.elf bootsector.bin
+	#i686-elf-ld -T linker.ld -o bootsector.elf bootsector.o
+	#i686-elf-objcopy -O binary bootsector.elf bootsector.bin
+	i686-elf-ld -T linker.ld --oformat binary -s -o bootsector.bin bootsector.o
 
 build: bootsector.bin
 
