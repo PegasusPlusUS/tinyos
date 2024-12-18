@@ -1,47 +1,55 @@
-const std = @import("std");
+//const std = @import("std");
+var BOOT_SECTOR_SIGNATURE: u16 = 0xAA55; // Bootsector signature (last 2 bytes)
 
-const COM1 = 0x3F8; // Base address of COM1 port (just in case)
+pub fn main() void {
+    _start();
+}
 
-const hello_message = "Hello, World!"; // The string to be printed
-
-// The entry point for our bootloader
 export fn _start() void {
-    // Set video mode (0x03 = 80x25 text mode)
-    set_video_mode();
+    // const hello_message = "Hello, World!";
 
     // Print the message character by character
-    var index: usize = 0;
-    while (true) {
-        const c = hello_message[index];
-        if (c == 0) break; // Null-terminator means the end of the string
-        print_char(c);
-        index += 1;
-    }
+    //print_string_at(hello_message, 0, 0, 10);
+    print_string_at(8, 8);
+
+    BOOT_SECTOR_SIGNATURE -= 1;
+    BOOT_SECTOR_SIGNATURE += 1;
 
     // Hang the system after printing (infinite loop)
     while (true) {}
 }
 
-// Set video mode using BIOS interrupt (0x10, function 0x00)
-fn set_video_mode() void {
-    @asm volatile (
-        "movb $0x03, %%ah\n\t"  // Set video mode (0x03 = 80x25 text mode)
-        "int $0x10\n\t"          // Call BIOS interrupt
+//fn print_string_at(str: []const u8, row: u8, col: u8, color: u8) void {
+fn print_string_at(row: u8, col: u8) void {
+    // Set cursor position
+    asm volatile (
+        \\mov $0x02, %%ah
+        \\xor %%bh, %%bh
+        \\movb %[row], %%r8b
+        \\movb %[col], %%dl
+        \\int $0x10
         :
-        :
-        : "ah", "bx", "cx", "dx" // Clobbered registers
+        : [row] "r" (row),
+          [col] "r" (col),
+        : "ax", "bx", "dx", "r8"
     );
-}
 
-// Print a character to the screen using BIOS interrupt (0x10, function 0x0E)
-fn print_char(c: u8) void {
-    @asm volatile (
-        "movb $0x0E, %%ah\n\t"  // BIOS function to print character
-        "movb $0x07, %%bh\n\t"  // Page number (0)
-        "movb %0, %%dl\n\t"      // Load character into DL
-        "int $0x10\n\t"          // Call BIOS interrupt
-        :
-        : "r" (c)                 // Input: the character to print
-        : "ah", "bh", "dl"       // Clobbered registers
-    );
+    // // Print string with color
+    // for (str) |c| {
+    //     if (c == 0) break;
+    //     asm volatile (
+    //         \\movb $0x09, %%ah
+    //         \\mov $1, %%cx
+    //         \\int $0x10
+    //         \\movb $0x03, %%ah
+    //         \\int $0x10
+    //         \\incb %%dl
+    //         \\movb $0x02, %%ah
+    //         \\int $0x10
+    //         :
+    //         : [char] "r" (c),
+    //           [color] "r" (color),
+    //         : "ax", "cx", "dx"
+    //     );
+    // }
 }
