@@ -28,20 +28,19 @@ short _scroll_pos_ = 0;
 
 FN_BIOS_PRINT_ADDRESS_AS_HEX;
 
-volatile char temp;
 void print_adv_msg_scroll() {
     BIOS_PRINT_STRING__MSG(ADV_MSG + _scroll_pos_);
-    temp = ADV_MSG[_scroll_pos_];
+    _asm_char_2_ = ADV_MSG[_scroll_pos_];
     ADV_MSG[_scroll_pos_] = 0;
     BIOS_PRINT_STRING__MSG(ADV_MSG);
-    ADV_MSG[_scroll_pos_] = temp;
+    ADV_MSG[_scroll_pos_] = _asm_char_2_;
     if (++_scroll_pos_ >= sizeof(ADV_MSG)) {
         _scroll_pos_ = 0;
     }
     char stack_var;
     //Will hang if assign to stack_var or even access address of stack_var
     //stack_var = 'H';
-    _address_ = &stack_var;
+    //_address_ = &stack_var;
     //BIOS_GET_ADDRESS_OF_STACK_VAR(stack_var);
     //BIOS_PRINT_ADDRESS_AS_HEX();
 
