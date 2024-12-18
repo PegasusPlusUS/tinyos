@@ -7,15 +7,21 @@ edition = "2021"
 name="tinyos"
 path="src/main.rs"
 
-[[bin]]
-name="bootsector"
-path="src/bin/bootsector.rs"
-
-[dependencies]
-winapi = { version = "0.3", features = ["winbase"] }
-
 [profile.dev]
 panic = "abort"
+opt-level = "z"
 
 [profile.release]
 panic = "abort"
+opt-level = "s"
+lto = true
+strip = true
+
+[target.x86_64-unknown-none]
+#linker = "ld"
+#rustflags = ["-C", "link-args=-S"]
+
+#[dependencies]
+#core = { path = "C:\\Users\\ping\\.rustup\\toolchains\\nightly-x86_64-pc-windows-msvc\\lib\\rustlib\\src\\rust\\library\\core" }
+##compiler_builtins = { path = "C:\\Users\\ping\\.rustup\\toolchains\\nightly-x86_64-pc-windows-msvc\\lib\\rustlib\\x86_64-unknown-none\\lib\\librustc_std_workspace_core-5d5c62adc8e81657.rlib" }
+#compiler_builtins = { version = "0.1.138", default-features = false }
