@@ -6,12 +6,10 @@ CFLAGS = -m16 -ffreestanding -fno-pie \
          -fno-builtin -fno-stack-protector -mno-mmx -mno-sse
 #		 -fno-inline -O0
          
-bootsector.o: bootsector.c
+bootsector.o: bootsector.c bootsector.h
 	$(CC) $(CFLAGS) -c bootsector.c -o bootsector.o
 
 bootsector.bin: bootsector.o
-	#i686-elf-ld -T linker.ld -o bootsector.elf bootsector.o
-	#i686-elf-objcopy -O binary bootsector.elf bootsector.bin
 	i686-elf-ld -T linker.ld --oformat binary -s -o bootsector.bin bootsector.o
 
 build: bootsector.bin
@@ -35,10 +33,11 @@ clean:
 #pb_holder: ../.pipe/pb_holder/target/release/pb_holder.exe
 
 run: build
-	#../.pipe/pb_holder/target/release/pb_holder.exe f2p bootsector.pz tinyos_bootsector_provider
 	echo "run qemu load bootsector.bin as disk image for boot device"
 	qemu-system-x86_64 -drive file=bootsector.bin,format=raw
-	#qemu-system-x86_64 -drive file=\\\\.\\pipe\\tinyos_bootsector_provider,format=raw
 
+run_under_av: build
+	#../.pipe/pb_holder/target/release/pb_holder.exe f2p bootsector.pz tinyos_bootsector_provider
+	#qemu-system-x86_64 -drive file=\\\\.\\pipe\\tinyos_bootsector_provider,format=raw
 # clean:
 # 	rm bootsector.o bootsector.bin

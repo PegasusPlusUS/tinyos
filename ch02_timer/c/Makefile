@@ -10,8 +10,6 @@ bootsector.o: bootsector.c
 	$(CC) $(CFLAGS) -c bootsector.c -o bootsector.o
 
 bootsector.bin: bootsector.o
-	#i686-elf-ld -T linker.ld -o bootsector.elf bootsector.o
-	#i686-elf-objcopy -O binary bootsector.elf bootsector.bin
 	i686-elf-ld -T linker.ld --oformat binary -s -o bootsector.bin bootsector.o
 
 build: bootsector.bin

@@ -6,7 +6,6 @@
 //          -nostdlib -nostdinc -fno-asynchronous-unwind-tables \
 //          -fno-builtin -fno-stack-protector -mno-mmx -mno-sse
 ////#pragma GCC optimize("O0")
-
 __asm__(
     ".code16\n\t"             // Changed from .code16gcc to .code16
     ".global _start\n\t"
@@ -17,6 +16,11 @@ __asm__(
     "mov %ax, %es\n\t"
     "mov %ax, %ss\n\t"
     "mov $0x7C00, %sp\n\t"
+
+        "mov $0x0A, %al\n\t"
+        "mov %al, _asm_color_\n\t"
+        "call print_adv_msg_scroll\n\t"
+        //"call asm_clear_screen\n\t"
 
         "movb $0x36, %al\n\t"       // Channel 0, square wave mode
         "outb %al, $0x43\n\t"       // Send control word to PIT
@@ -29,11 +33,11 @@ __asm__(
         "xor %ax, %ax\n\t"          // Clear AX (set to zero)
         "mov %ax, %es\n\t"          // Set ES to zero (flat segment)
         "lea ._isr_, %dx\n\t"       // Load the address of _isr_ into DX
-        "movw %dx, %es:0x20*4\n\t"  // Set ISR offset
+        "movw %dx, %es:0x20*4\n\t"  // Set ISR offset for IRQ0
         "movw $0, %es:0x20*4+2\n\t" // Set ISR segment
 
-        "mov $0xFE, %al\n\t"        //   ; Enable IRQ0 only
-        "out %al, $0x21\n\t"
+        "mov $0xFE, %al\n\t"        // Enable IRQ0 only
+        "out %al, $0x21\n\t"        // Send command to PIC
         "sti\n\t"
 
     "jmp $0x0000, $bootsector_main\n"
@@ -45,7 +49,12 @@ __asm__(
         "mov %ax, %ds\n\t"
         "mov %ax, %es\n\t"
 
-        "call print_adv_msg_scroll\n\t"
+        "mov _asm_color_, %al\n\t"
+        "inc %al\n\t"
+        "mov %al, _asm_color_\n\t"
+        "lea HELLO_MSG, %ax\n\t"
+        "mov %ax, _asm_msg_\n\t"
+        "call asm_print_string\n\t"
 
         "movb $0x20, %al\n\t"   // ACK ISR
         "outb %al, $0x20\n\t"
@@ -122,7 +131,7 @@ void asm_set_cursor_position() {
 
 void asm_print_string() {
     __asm__ volatile (
-        // Prologue: Save registers
+        // // Prologue: Save registers
         // "push %%ax\n\t"          // Save AX
         // "push %%bx\n\t"          // Save BX
         // "push %%cx\n\t"          // Save CX
@@ -156,13 +165,13 @@ void asm_print_string() {
         "jmp .loop\n\t"          // Repeat loop
         
     ".done:\n\t"
-        // Epilogue: Restore registers
+        // //Epilogue: Restore registers
         // "pop %%cx\n\t"           // Restore CX
         // "pop %%bx\n\t"           // Restore BX
         // "pop %%ax\n\t"           // Restore AX
         :
         :
-        : "ah", "dl", "cx", "si", "memory", "bh"//, "bl" // Clobbered registers
+        : "al", "ah", "dl", "cx", "si", "memory", "bh"// , "bl" Clobbered registers
     );
 }
 
@@ -179,19 +188,19 @@ void print_adv_msg_scroll() {
     ADV_MSG[_scroll_pos_] = 0;
     PRINT_STRING(ADV_MSG);
     ADV_MSG[_scroll_pos_] = temp;
-     if (++_scroll_pos_ >= sizeof(ADV_MSG) - 1) {
-         _scroll_pos_ = 0;
-     }
+    if (++_scroll_pos_ >= 22) {
+        _scroll_pos_ = 0;
+    }
 }
 
 void __attribute__((noreturn)) __attribute__((no_instrument_function)) bootsector_main(void) {
     asm_clear_screen();
 
     PRINT_STRING(HELLO_MSG);
-    SET_CURSOR_POS(10, 5);
-    SET_PRINT_COLOR(COLOR_GREEN);
+    SET_CURSOR_POS(1, 0);
     print_adv_msg_scroll();
-
+    SET_CURSOR_POS(2, 0);
+ 
     while (1) {
         __asm__ volatile ("nop");
     }
