@@ -4,11 +4,14 @@ nasm/bootsector.bin : nasm/bootsector.asm
 .pipe/pb_holder/target/release/pb_holder : .pipe/pb_holder/Cargo.toml
 	cd .pipe/pb_holder && cargo build --release
 
-build : nasm/bootsector.bin .pipe/pb_holder/target/release/pb_holder	
-	echo "run bochs or test.qemu to test tinyOS from VM"
+build : nasm/bootsector.bin
+	echo "run test.qemu.sh to test tinyOS from VM"
 
 run : build
-	bash -c "./test.bochs.sh & ./test.qemu.sh &"
+	bash -c "./test.qemu.sh &"
+
+run_with_defender : run .pipe/pb_holder/target/release/pb_holder
+	echo "Using pb_holder to brige compiler and VM, avoiding saving bootsetor file"
 
 clean :
 	rm -f nasm/bootsector.bin
