@@ -57,16 +57,16 @@ start:
 ; otherwise clear paused display
     call clear_paused;
 
-    ; Update color
-    mov al, [adv_msg_color]
-    inc al
-    cmp al, 0x10
-    jb .no_background
-    xor al, al
-.no_background:
-    mov [adv_msg_color], al
-    call print_adv_scroll
-    call query_and_print_time
+;     ; Update color
+;     mov al, [adv_msg_color]
+;     inc al
+;     cmp al, 0x10
+;     jb .no_background
+;     xor al, al
+; .no_background:
+;     mov [adv_msg_color], al
+    CALL_PRINT_ADV_SCROLL
+    CALL_QUERY_AND_PRINT_TIME
     jmp .main_loop
 
 .paused_action:
@@ -80,7 +80,7 @@ FN_PRINT_STRING
 FN_QUERY_AND_PRINT_TIME
 
 ; Data
-hello_msg db 'Hello, world!', 0
+hello_msg db 'Hello, bootsector by ASM in busy loop!', 0
 hello_msg_row db 0
 hello_msg_col db 0
 hello_msg_color db 0x0E

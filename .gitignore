@@ -3,3 +3,7 @@
 **/target/
 **/.zig-cache/
 **/zig-out/
+ch01_bootsector/c/bootsector.elf
+ch01_bootsector/c/bootsector.o
+ch01_bootsector/nim/bootsector.exe
+ch02_timer/c/bootsector.o

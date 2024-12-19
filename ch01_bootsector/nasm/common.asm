@@ -109,30 +109,34 @@ time_str_color db 0x0F
 %endmacro
 
 %macro DATA_SAFE_POWER_OFF 0
-turn_on_msg db "It's safe to turn off your box.", 0
+turn_on_msg db "It's safe to turn off.", 0
 turn_on_msg_row db 4
 turn_on_msg_col db 0
-turn_on_msg_color db 0x0C
+turn_on_msg_color db 0x0A
 %endmacro
 
 %macro DATA_ADV 0
-adv_msg db 'TinyOS at https://github.com/pegasusplus/tinyos ', 0
+adv_msg db 'Open source tutorial at github:pegasusplus/tinyos ', 0
 adv_msg_len dw $ - adv_msg - 1
 ;adv_msg_len equ $ - adv_msg - 1
 adv_msg_row db 6
 adv_msg_col db 0
-adv_msg_color db 0x0C
+adv_msg_color db 0x0D
 scroll_pos dw 0
 char_at_scroll_pos db 0
 %endmacro
 
 %macro DATA_PAUSED 0
-is_paused db 1          ; 0 = running, 1 = paused
+is_paused db 0          ; 0 = running, 1 = paused
 is_paused_display db 0
 paused_msg db 'Paused', 0
 paused_msg_row db 2
 paused_msg_col db 37
 paused_msg_color db 0x0E
+%endmacro
+
+%macro CALL_PRINT_ADV_SCROLL 0
+call print_adv_scroll
 %endmacro
 
 %macro FN_PRINT_ADV_SCROLL 0
@@ -172,6 +176,10 @@ print_adv_scroll:
 .not_wrap:
     mov [scroll_pos], ax
     ret
+%endmacro
+
+%macro CALL_QUERY_AND_PRINT_TIME 0
+call query_and_print_time
 %endmacro
 
 %macro FN_QUERY_AND_PRINT_TIME 0

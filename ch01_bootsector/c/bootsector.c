@@ -1,168 +1,88 @@
-__asm__(".code16\n");           // Changed from .code16gcc to .code16
-__asm__(".global _start\n");    // Add this line
-__asm__("_start:\n");          // Add this line
-__asm__("jmp $0x0000, $main\n");  // Modified jump instruction
+// It's EXTREMELY HARD to REALIABLE pass param to 16bit inline asm (GPT said and many AI struggled and failed)
+// So we choose using shared data to pass params. EVEN C code function param passing is not working!!!!!! So
+// we have to use macro
+// CC = i686-elf-gcc
+// CFLAGS = -m16 -ffreestanding -fno-pie \
+//          -nostdlib -nostdinc -fno-asynchronous-unwind-tables \
+//          -fno-builtin -fno-stack-protector -mno-mmx -mno-sse
+////#pragma GCC optimize("O0")
+#include "bootsector.h"
 
-#define VIDEO_INT   0x10
-#define TIMER_INT   0x1A
+ASM_EPILOG;
 
-typedef struct {
-    unsigned char hours;
-    unsigned char minutes;
-    unsigned char seconds;
-} Time;
+FN_BIOS_SET_CURSOR_POS__ROW_COL;
 
-// Function declarations
-void print_string_at(const char* str, char row, char col, char color);
-Time get_rtc_time(void);
-void print_time_at(Time time, char row, char col, char color);
-void handle_adv_scroll(void);
+// Time get_rtc_time(void);
+// void print_time_at(Time time, char row, char col, char color);
 
-// Messages
-const char* HELLO_MSG = "Hello, bootsector!";
-const char* SAFE_MSG = "Now it is safe to turn off your box.";
-const char* ADV_MSG = "TinyOS is an open source tutorial at https://github.com/pegasusplus/tinyos";
+DATA_BIOS_PARAM;
+DATA_ADV_MSG;
 
-// Colors
-enum {
-    COLOR_YELLOW = 0x0E,
-    COLOR_WHITE = 0x0F,
-    COLOR_GREEN = 0x0A
-};
+FN_BIOS_PRINT_STRING__MSG_COLOR;
+FN_BIOS_CLEAR_SCREEN;
 
-void __attribute__((noreturn)) __attribute__((no_instrument_function)) main(void) {
-    // Set up segments
-    __asm__ volatile (
-        "xor %ax, %ax\n"
-        "mov %ax, %ds\n"
-        "mov %ax, %es\n"
-        "mov %ax, %ss\n"
-        "mov $0x7C00, %sp\n"
-        "mov $0x0003, %ax\n"
-        "int $0x10\n"
-    );
+char HELLO_MSG[] = " Hi, asm & C! ";
+short _scroll_pos_ = 0;
 
-    // Print hello message in yellow
-    print_string_at(HELLO_MSG, 0, 0, COLOR_YELLOW);
+FN_BIOS_PRINT_ADDRESS_AS_HEX;
 
-    // Print safe message in green
-    print_string_at(SAFE_MSG, 2, 0, COLOR_GREEN);
+// void test_stack_var() {
+//     char stack_var;
+//     //Will hang if assign to stack_var or even access address of stack_var
+//     //stack_var = 'H';
+//     //_address_ = &stack_var;
+//     //BIOS_GET_ADDRESS_OF_STACK_VAR(stack_var);
+//     //BIOS_PRINT_ADDRESS_AS_HEX();
 
+//     // asm volatile (
+//     //     "lea %1, %%ax\n\t" // Load the address of tmp into AX
+//     //     "mov %%ax, %0\n\t" // Move the address from AX to pch
+//     //     : "=m"(pch) // Output operand: pch
+//     //     : "m"(tmp) // Input operand: tmp 
+//     //     : "ax" // Clobbered register 
+//     //     );
+//     // print_address_as_hex();
+//     // asm volatile (
+//     //     "mov %%ss, %%ax\n\t"
+//     //     "mov %%ax, _address_\n\t"
+//     //     :
+//     //     :
+//     //     :
+//     //     );
+//     // print_address_as_hex();
+// }
+
+void print_hi_msg_scroll() {
+    BIOS_PRINT_STRING__MSG(HELLO_MSG + _scroll_pos_);
+    _asm_char_2_ = HELLO_MSG[_scroll_pos_];
+    HELLO_MSG[_scroll_pos_] = 0;
+    BIOS_PRINT_STRING__MSG(HELLO_MSG);
+    HELLO_MSG[_scroll_pos_] = _asm_char_2_;
+    if (++_scroll_pos_ >= sizeof(HELLO_MSG)) {
+        _scroll_pos_ = 0;
+    }
+}
+
+volatile int delay;
+
+void __attribute__((noreturn)) __attribute__((no_instrument_function)) bootsector_main(void) {
+    BIOS_CLEAR_SCREEN();
+    BIOS_SET_CURSOR_POS__ROW_COL(12, 27);
+    BIOS_SET_PRINT_COLOR__COLOR(COLOR_GREEN);
+    BIOS_PRINT_STRING__MSG(ADV_MSG);
+ 
     while (1) {
-        // Get and display time
-        Time time = get_rtc_time();
-        print_time_at(time, 1, 0, COLOR_WHITE);
-
-        // Handle scrolling advertisement
-        handle_adv_scroll();
-
-        // Simple delay
-        for (unsigned short i = 0; i < 0x2FFF; i++) {
+        delay = 0;
+        while (++delay < 280000) {
             __asm__ volatile ("nop");
         }
+
+        BIOS_SET_CURSOR_POS__ROW_COL(8, 33);
+        BIOS_SET_PRINT_COLOR__COLOR(COLOR_WHITE);
+        print_hi_msg_scroll();
+        //test_stack_var();
     }
 }
 
-void print_string_at(const char* str, char row, char col, char color) {
-    // Set cursor position
-    __asm__ volatile (
-        "mov $0x02, %%ah\n"
-        "xor %%bh, %%bh\n"
-        "int $0x10\n"
-        :
-        : "d" ((row << 8) | col)
-        : "ax", "bx"
-    );
-
-    // Print string with color
-    while (*str) {
-        __asm__ volatile (
-            "mov $0x09, %%ah\n"
-            "mov $1, %%cx\n"
-            "int $0x10\n"
-            "mov $0x03, %%ah\n"
-            "int $0x10\n"
-            "inc %%dl\n"
-            "mov $0x02, %%ah\n"
-            "int $0x10\n"
-            :
-            : "a" (*str), "b" (color)
-            : "cx"
-        );
-        str++;
-    }
-}
-
-Time get_rtc_time(void) {
-    Time time;
-    unsigned char hours, minutes, seconds;
-
-    __asm__ volatile (
-        "movb $0x02, %%ah\n"
-        "int $0x1A\n"
-        "movb %%ch, %0\n"
-        "movb %%cl, %1\n"
-        "movb %%dh, %2\n"
-        : "=m" (hours), "=m" (minutes), "=m" (seconds)
-        :
-        : "ax", "cx", "dx"
-    );
-
-    // Convert BCD to binary
-    time.hours = ((hours >> 4) * 10) + (hours & 0x0F);
-    time.minutes = ((minutes >> 4) * 10) + (minutes & 0x0F);
-    time.seconds = ((seconds >> 4) * 10) + (seconds & 0x0F);
-
-    return time;
-}
-
-void print_time_at(Time time, char row, char col, char color) {
-    char time_str[9];
-
-    // Format time string
-    time_str[0] = '0' + (time.hours / 10);
-    time_str[1] = '0' + (time.hours % 10);
-    time_str[2] = ':';
-    time_str[3] = '0' + (time.minutes / 10);
-    time_str[4] = '0' + (time.minutes % 10);
-    time_str[5] = ':';
-    time_str[6] = '0' + (time.seconds / 10);
-    time_str[7] = '0' + (time.seconds % 10);
-    time_str[8] = 0;
-
-    print_string_at(time_str, row, col, color);
-}
-
-static unsigned char scroll_pos = 0;
-static unsigned char adv_color = 0x0C;
-
-void handle_adv_scroll(void) {
-    char temp = ADV_MSG[scroll_pos];
-    ((char*)ADV_MSG)[scroll_pos] = 0;
-
-    // Print from scroll_pos + 1
-    print_string_at(&ADV_MSG[scroll_pos + 1], 6, 0, adv_color);
-    
-    // Print from beginning
-    print_string_at(ADV_MSG, 6, 0, adv_color);
-
-    // Restore character
-    ((char*)ADV_MSG)[scroll_pos] = temp;
-
-    // Update position and color
-    scroll_pos++;
-    if (scroll_pos >= sizeof(ADV_MSG) - 1) {
-        scroll_pos = 0;
-    }
-    adv_color++;
-}
-
-void __attribute__((section(".text.boot"))) _start(void)
-{
-    // Your bootloader code here
-    while(1);
-}
-
-// Boot signature
 __asm__(".section .boot_signature\n"
         ".byte 0x55, 0xAA\n");
