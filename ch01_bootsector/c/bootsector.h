@@ -68,7 +68,7 @@ void asm_clear_screen() {\
 #define BIOS_CLEAR_SCREEN(_) asm_clear_screen()
 
 #define FN_BIOS_PRINT_STRING__MSG_COLOR \
-void asm_print_string_msg_color() {\
+void asm_print_string__msg_color() {\
     __asm__ volatile (\
         ".code16\n\t"\
         "pushal\n\t"\
@@ -101,7 +101,7 @@ void asm_print_string_msg_color() {\
 #define FN_BIOS_PRINT_ADDRESS_AS_HEX \
 /* // Define a buffer to hold the hexadecimal string */\
 char _hex_buffer_[5] = ":0000";\
-void *_address_=ADV_MSG;\
+const void *_address_=ADV_MSG;\
 void asm_print_address_as_hex() {\
     asm volatile (\
         "pushal\n\t"\
@@ -185,12 +185,15 @@ void asm_print_address_as_hex() {\
 #define BIOS_PRINT_STRING__MSG(msg)\
     do {\
         _asm_msg_ = msg;\
-        asm_print_string_msg_color();\
+        asm_print_string__msg_color();\
     } while(0)
 
 #define DATA_BIOS_PARAM \
 volatile char _asm_char_1_;\
 volatile char _asm_char_2_;\
 volatile const char* _asm_msg_
+
+#define DATA_ADV_MSG \
+const char ADV_MSG[] = "GitHub:PegasusPlus/tinyos"
 
 #endif

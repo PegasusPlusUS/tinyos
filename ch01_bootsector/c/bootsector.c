@@ -16,13 +16,13 @@ FN_BIOS_SET_CURSOR_POS__ROW_COL;
 // void print_time_at(Time time, char row, char col, char color);
 
 DATA_BIOS_PARAM;
+DATA_ADV_MSG;
 
 FN_BIOS_PRINT_STRING__MSG_COLOR;
 FN_BIOS_CLEAR_SCREEN;
 
 char HELLO_MSG[] = " Hi, asm & C! ";
 short _scroll_pos_ = 0;
-const char ADV_MSG[] = "GitHub:PegasusPlus/tinyos";
 
 FN_BIOS_PRINT_ADDRESS_AS_HEX;
 
