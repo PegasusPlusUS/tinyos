@@ -1,6 +1,6 @@
 .PONEY : build run clean
 
-CC = i386-elf-gcc
+CC = i686-elf-gcc
 CFLAGS = -m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffreestanding -fno-pie \
 		-nostdlib -nostdinc -fno-asynchronous-unwind-tables \
 		-fno-builtin -fno-stack-protector -mno-mmx -mno-sse
