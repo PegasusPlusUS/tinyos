@@ -1,18 +1,23 @@
 .PONEY : build run clean
 
-CC = i686-elf-gcc
-CFLAGS = -m16 -ffreestanding -fno-pie \
-         -nostdlib -nostdinc -fno-asynchronous-unwind-tables \
-         -fno-builtin -fno-stack-protector -mno-mmx -mno-sse
+CC = i386-elf-gcc
+CFLAGS = -m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffreestanding -fno-pie \
+		-nostdlib -nostdinc -fno-asynchronous-unwind-tables \
+		-fno-builtin -fno-stack-protector -mno-mmx -mno-sse
+ASMFLAGS = -m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffreestanding -fno-pie \
+		-nostdlib -nostdinc -fno-asynchronous-unwind-tables \
+		-fno-builtin -fno-stack-protector -mno-mmx -mno-sse -O0 -S 
+
 #		 -fno-inline -O0
          
-bootsector.o: bootsector.c bootsector.h
+bootsector.o: bootsector.c bootsector.h Makefile
 	$(CC) $(CFLAGS) -c bootsector.c -o bootsector.o
+	$(CC) $(ASMFLAGS) -o bootsector.s bootsector.c
 
 bootsector.bin: bootsector.o
 	i686-elf-ld -T linker.ld --oformat binary -s -o bootsector.bin bootsector.o
 
-build: bootsector.bin
+build: bootsector.bin Makefile
 
 clean:
 	rm -f *.o *.bin *.elf

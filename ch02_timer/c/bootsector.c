@@ -136,7 +136,7 @@ void asm_print_string() {
         // "push %%bx\n\t"          // Save BX
         // "push %%cx\n\t"          // Save CX
 
-        "mov [_asm_msg_], %%si\n\t"
+        "lea _asm_msg_, %%si\n\t"
         "movb _asm_color_, %%bl\n\t"  //
     ".loop:\n\t"
         // Load next character

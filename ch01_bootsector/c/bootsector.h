@@ -9,6 +9,7 @@ __asm__(    \
     "xor %ax, %ax\n\t"      \
     "mov %ax, %ds\n\t"      \
     "mov %ax, %es\n\t"      \
+    "mov %ax, %cs\n\t"      \
     "mov %ax, %ss\n\t"      \
     "mov $0x7BFF, %sp\n\t"  \
     "jmp $0x0000, $bootsector_main\n" \
@@ -21,10 +22,10 @@ enum {
      COLOR_YELLOW = 0x0E,
      COLOR_CYAN = 0x0D,
 //     COLOR_RED = 0x0C,
-//     COLOR_BLUE = 0x0B,
+     COLOR_BLUE = 0x0B,
      COLOR_GREEN = 0x0A,
-//     COLOR_PURPLE = 0x09,
-//     COLOR_ORANGE = 0x08,
+     COLOR_PURPLE = 0x09,
+     COLOR_ORANGE = 0x08,
 //     COLOR_BROWN = 0x07,
 //     COLOR_GREY = 0x06,
 //     COLOR_LIGHT_GREY = 0x05,
@@ -69,8 +70,9 @@ void asm_clear_screen() {\
 #define FN_BIOS_PRINT_STRING__MSG_COLOR \
 void asm_print_string_msg_color() {\
     __asm__ volatile (\
+        ".code16\n\t"\
         "pushal\n\t"\
-        "mov [_asm_msg_], %%si\n\t"\
+        "mov _asm_msg_, %%si\n\t"\
     ".loop:\n\t"\
         "lodsb\n\t"              /* Load next byte from [SI] into AL (address of str pointed by ESI) */\
         "test %%al, %%al\n\t"    /* Test AL (check for null terminator) */\
