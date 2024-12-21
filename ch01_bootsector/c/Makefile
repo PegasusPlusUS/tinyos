@@ -39,10 +39,8 @@ clean:
 
 run: build
 	echo "run qemu load bootsector.bin as disk image for boot device"
-	qemu-system-x86_64 -drive file=bootsector.bin,format=raw
+	qemu-system-x86_64 -m 1m -drive file=bootsector.bin,format=raw
 
 run_under_av: build
 	#../.pipe/pb_holder/target/release/pb_holder.exe f2p bootsector.pz tinyos_bootsector_provider
-	#qemu-system-x86_64 -drive file=\\\\.\\pipe\\tinyos_bootsector_provider,format=raw
-# clean:
-# 	rm bootsector.o bootsector.bin
+	#qemu-system-x86_64 -m 1m -drive file=\\\\.\\pipe\\tinyos_bootsector_provider,format=raw

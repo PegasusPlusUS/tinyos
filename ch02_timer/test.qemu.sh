@@ -1,1 +1,1 @@
-qemu-system-x86_64 -drive file=nasm/bootsector.bin,format=raw
+qemu-system-x86_64 -m 1m -drive file=nasm/bootsector.bin,format=raw
