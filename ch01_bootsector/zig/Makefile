@@ -4,10 +4,11 @@ bootsector: src/bootsector.zig
 
 build: bootsector
 	nasm -f elf64 bootsector.asm -o bootsector.bin
-	xxd -l 608 -g 1 bootsector.bin
+	#xxd -l 608 -g 1 bootsector.bin
+	../dump.sh
 
 run: bootsector
-	./test.qemu.sh
+	../test.qemu.sh
 
 clean:
 	rm bootsector bootsector.o
