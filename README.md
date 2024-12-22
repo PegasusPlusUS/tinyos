@@ -45,8 +45,8 @@ Install toolchain:
 
 PS:
  ch01/ch02 can use NASM only (or it's better only use NASM), higher level languages (even C) usually
- bring trouble struggling on param passing and interacting with inline asm, wasting much time and has little help in bootsector, because it's too small to contain advanced flow control or functional/logical/clousure etc. provided by higher level languages. If you are interesting, you can look at subdirectories of c/rs/zig/nim to see how they are using in bootsector.
+ bring trouble struggling on param passing and interacting with inline asm, wasting much time and has little help in bootsector, because it's too small to contain advanced flow control or functional/logical/clousure etc. provided by higher level languages. If you are interesting, you can look at subdirectories of c/nim/pascal/rs/v/zig/ to see how they are using in bootsector. (Now c/v has successfully generate bootsector)
 
-  after that, pure ASM will be hardwork compared to high level languages. It's better using i686-elf-gcc, g++, Rust, Zig, Nim, //or other high level languages, we will try add Swift, C#, Python, etc. step by step.
+  after that, pure ASM will be hardwork compared to high level languages. It's better using i686-elf-gcc, g++, Rust, Zig, Nim, //or other high level languages, we will try add Swift, C#, Python, Pascal, Ada, Fortran, etc. step by step.
 
 # Other topics, see README.md in each chapter.
