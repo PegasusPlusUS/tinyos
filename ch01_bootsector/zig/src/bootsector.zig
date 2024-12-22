@@ -33,23 +33,4 @@ fn print_string_at(row: u8, col: u8) void {
           [col] "r" (col),
         : "ax", "bx", "dx", "r8"
     );
-
-    // // Print string with color
-    // for (str) |c| {
-    //     if (c == 0) break;
-    //     asm volatile (
-    //         \\movb $0x09, %%ah
-    //         \\mov $1, %%cx
-    //         \\int $0x10
-    //         \\movb $0x03, %%ah
-    //         \\int $0x10
-    //         \\incb %%dl
-    //         \\movb $0x02, %%ah
-    //         \\int $0x10
-    //         :
-    //         : [char] "r" (c),
-    //           [color] "r" (color),
-    //         : "ax", "cx", "dx"
-    //     );
-    // }
 }

@@ -6,7 +6,7 @@ build : bootsector.bin
 
 run : bootsector.bin
 	echo "run QEMU to load bootsector.bin as disk image for boot device"
-	qemu-system-x86_64 -drive file=bootsector.bin,format=raw
+	qemu-system-x86_64 -m 1m -drive file=bootsector.bin,format=raw
 
 clean :
 	rm -f bootsector.bin

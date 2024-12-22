@@ -84,5 +84,4 @@ void __attribute__((noreturn)) __attribute__((no_instrument_function)) bootsecto
     }
 }
 
-__asm__(".section .boot_signature\n"
-        ".byte 0x55, 0xAA\n");
+END_BOOTSECTOR
