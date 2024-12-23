@@ -19,7 +19,6 @@ COMPILER=v
 COMPILER2C_FLAGS=-freestanding
 $(TOC_SOURCE): $(FILE_SOURCE) $(FILE_SOURCE_DEPENDENCY) $(FILE_THIS)
 	@echo "# Compile $(FILE_TARGET) by $(COMPILER)."
-	# @$(COMPILER) $(COMPILER2C_FLAGS) -o $(TOC_SOURCE) $(FILE_SOURCE)
 	@$(COMPILER) $(COMPILER2C_FLAGS) -o $(TOC_SOURCE) .
 
 # 2. Filter C
@@ -28,7 +27,7 @@ FILTER=awk
 SCRIPT_FILTER_TOC_SOURCE=filter_toc_source.awk
 $(TOC_SOURCE_FILTERED): $(TOC_SOURCE) $(SCRIPT_FILTER_TOC_SOURCE) $(FILE_THIS)
 	@echo "# Filter out unneeded code and add necessary reused functions and $(BOOTSECTOR) signature from ../c/$(BOOTSECTOR).h by $(FILTER)."
-	$(FILTER) -f $(SCRIPT_FILTER_TOC_SOURCE) $(TOC_SOURCE) > $(TOC_SOURCE_FILTERED)
+	@$(FILTER) -f $(SCRIPT_FILTER_TOC_SOURCE) $(TOC_SOURCE) > $(TOC_SOURCE_FILTERED)
 
 # 3. C to O
 OBJ_INTERMIDIATE=$(BOOTSECTOR).o
@@ -38,7 +37,7 @@ C2O_FLAGS = -m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffr
 		-nostdlib -nostdinc -fno-asynchronous-unwind-tables \
 		-fno-builtin -fno-stack-protector -mno-mmx -mno-sse
 C2ASM_FLAGS = $(C2O_FLAGS) -O0 -S
-C_DEPENDENCIES=common_prefix.h common_surfix.h
+C_DEPENDENCIES=../c/common_prefix.h ../c/bootsector.h ../c/common_surfix.h
 C_V_DEPENDENCIES=common_prefix.v.h common_surfix.v.h $(C_DEPENDENCIES)
 $(OBJ_INTERMIDIATE): $(TOC_SOURCE_FILTERED) $(C_V_DEPENDENCIES) $(FILE_THIS)
 	@echo "# Compile processed c code to object by $(CC)."

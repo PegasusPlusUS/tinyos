@@ -1,4 +1,4 @@
-#include "../c/bootsector.h"
+#include "bootsector.h"
 ASM_EPILOG;
 FN_BIOS_CLEAR_SCREEN;
 FN_BIOS_SET_CURSOR_POS__ROW_COL;
