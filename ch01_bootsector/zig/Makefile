@@ -1,13 +1,17 @@
-bootsector: src/bootsector.zig
-	#zig build-exe -target x86_64-freestanding-none -T linker.ld -O ReleaseSmall src/bootsector.zig
-	zig build-exe -femit-asm=bootsector.asm -target x86_64-freestanding-none -O ReleaseSmall src/bootsector.zig
 
-build: bootsector
+
+bootsector.asm: src/bootsector.zig Makefile 
+	zig build-exe -femit-asm=bootsector.z.asm -target x86_64-freestanding-none -O ReleaseSmall src/bootsector.zig
+	copy bootsector.z.asm bootsector.asm
+
+bootsector.bin: bootsector.asm Makefile
 	nasm -f elf64 bootsector.asm -o bootsector.bin
-	#xxd -l 608 -g 1 bootsector.bin
+
+build: bootsector.bin Makefile
+	echo "Using xxd to dump target file"
 	../dump.sh
 
-run: bootsector
+run: build Makefile
 	../test.qemu.sh
 
 clean:

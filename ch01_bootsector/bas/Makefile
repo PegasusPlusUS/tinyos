@@ -1,10 +1,4 @@
-# CC = i686-elf-gcc
-# CFLAGS = -m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffreestanding -fno-pie \
-# 		-nostdlib -nostdinc -fno-asynchronous-unwind-tables \
-# 		-fno-builtin -fno-stack-protector -mno-mmx -mno-sse
-# ASMFLAGS = -m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffreestanding -fno-pie \
-# 		-nostdlib -nostdinc -fno-asynchronous-unwind-tables \
-# 		-fno-builtin -fno-stack-protector -mno-mmx -mno-sse -O0 -S 
+#freebasic can compile to asm(gas)/c(gcc)/llvm code, use c will b easier since we already succeed on V2C
 
 # Disable default rules by overriding them with empty rules
 .SUFFIXES:
@@ -19,23 +13,23 @@ BOOTSECTOR=bootsector
 FILE_THIS=Makefile
 
 # CI_PIPE_LINE_START
-# # 1. C to C
-FILE_SOURCE=$(BOOTSECTOR).c
-FILE_SOURCE_DEPENDENCY=common_prefix.h bootsector.h common_suffix.h
-#TOC_SOURCE=$(FILE_SOURCE).c
-# COMPILER=v
-# COMPILER2C_FLAGS=-freestanding
-# $(TOC_SOURCE): $(FILE_SOURCE) $(FILE_SOURCE_DEPENDENCY) $(FILE_THIS)
-# 	@echo "# Compile $(FILE_TARGET) by $(COMPILER)."
-# 	@$(COMPILER) $(COMPILER2C_FLAGS) -o $(TOC_SOURCE) .
+# 1. Basic to C
+FILE_SOURCE=$(BOOTSECTOR).bas
+FILE_SOURCE_DEPENDENCY=common_bios.bas
+TOC_SOURCE=$(FILE_SOURCE).c
+COMPILER=fbc
+COMPILER2C_FLAGS=-r
+$(TOC_SOURCE): $(FILE_SOURCE) $(FILE_SOURCE_DEPENDENCY) $(FILE_THIS)
+	@echo "# Compile $(FILE_TARGET) by $(COMPILER)."
+	@$(COMPILER) $(COMPILER2C_FLAGS) -o $(TOC_SOURCE) $(FILE_SOURCE)
 
-# # 2. Filter C
+# 2. Filter C
 TOC_SOURCE_FILTERED=$(BOOTSECTOR).c
-# FILTER=awk
-# SCRIPT_FILTER_TOC_SOURCE=filter_toc_source.awk
-# $(TOC_SOURCE_FILTERED): $(TOC_SOURCE) $(SCRIPT_FILTER_TOC_SOURCE) $(FILE_THIS)
-# 	@echo "# Filter out unneeded code and add necessary reused functions and $(BOOTSECTOR) signature from ../c/$(BOOTSECTOR).h by $(FILTER)."
-# 	@$(FILTER) -f $(SCRIPT_FILTER_TOC_SOURCE) $(TOC_SOURCE) > $(TOC_SOURCE_FILTERED)
+FILTER=awk
+SCRIPT_FILTER_TOC_SOURCE=filter_toc_source.awk
+$(TOC_SOURCE_FILTERED): $(TOC_SOURCE) $(SCRIPT_FILTER_TOC_SOURCE) $(FILE_THIS)
+	@echo "# Filter out unneeded code and add necessary reused functions and $(BOOTSECTOR) signature from ../c/$(BOOTSECTOR).h by $(FILTER)."
+	@$(FILTER) -f $(SCRIPT_FILTER_TOC_SOURCE) $(TOC_SOURCE) > $(TOC_SOURCE_FILTERED)
 
 # 3. C to O
 OBJ_INTERMIDIATE=$(BOOTSECTOR).o
@@ -45,16 +39,17 @@ C2O_FLAGS = -m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffr
 		-nostdlib -nostdinc -fno-asynchronous-unwind-tables \
 		-fno-builtin -fno-stack-protector -mno-mmx -mno-sse
 C2ASM_FLAGS = $(C2O_FLAGS) -O0 -S
-C_DEPENDENCIES=common_prefix.h bootsector.h common_suffix.h
-$(OBJ_INTERMIDIATE): $(TOC_SOURCE_FILTERED) $(C_DEPENDENCIES) $(FILE_THIS)
-	@echo "# Compile c code to object by $(CC)."
+C_DEPENDENCIES=../c/common_prefix.h ../c/bootsector.h ../c/common_suffix.h
+C_BAS_DEPENDENCIES=common_prefix.bas.h common_suffix.bas.h $(C_DEPENDENCIES)
+$(OBJ_INTERMIDIATE): $(TOC_SOURCE_FILTERED) $(C_V_DEPENDENCIES) $(FILE_THIS)
+	@echo "# Compile processed c code to object by $(CC)."
 	@$(CC) $(C2O_FLAGS) -o $(OBJ_INTERMIDIATE) -c $(TOC_SOURCE_FILTERED)
 $(TOASM_SOURCE): $(TOC_SOURCE_FILTERED) $(FILE_THIS)
 	@echo "# Generate asm code for checking by $(CC)."
 	@$(CC) $(C2ASM_FLAGS) -o $(TOASM_SOURCE) $(TOC_SOURCE_FILTERED)
 
 LD=i686-elf-ld
-LD_FLAGS=-T linker.ld --oformat binary -s
+LD_FLAGS=-T ../c/linker.ld --oformat binary -s
 
 FILE_TARGET=$(BOOTSECTOR).bin
 $(FILE_TARGET): $(OBJ_INTERMIDIATE) $(FILE_THIS)
@@ -92,7 +87,7 @@ build_under_av: $(FILE_TARGET_UNDER_AV) $(FILE_THIS)
 	@$(SHELL) $(SCRIPT_VERIFY_UNDER_AV)
 
 neat:
-	rm -f *.o *.s
+	rm -f *.o *.s *.c
 
 clean: neat
 	rm -f $(FILE_TARGET)

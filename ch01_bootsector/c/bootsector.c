@@ -21,7 +21,7 @@ DATA_ADV_MSG;
 FN_BIOS_PRINT_STRING__MSG_COLOR;
 FN_BIOS_CLEAR_SCREEN;
 
-char HELLO_MSG[] = " Hi, asm & C! ";
+char HELLO_MSG[] = " Hi, elf-gcc! ";
 short _scroll_pos_ = 0;
 
 FN_BIOS_PRINT_ADDRESS_AS_HEX;
@@ -77,7 +77,7 @@ void __attribute__((noreturn)) __attribute__((no_instrument_function)) bootsecto
             __asm__ volatile ("nop");
         }
 
-        BIOS_SET_CURSOR_POS__ROW_COL(8, 33);
+        BIOS_SET_CURSOR_POS__ROW_COL(9, 33); // 33 = 40 - sizeof(HI_MSG)/2
         BIOS_SET_PRINT_COLOR__COLOR(COLOR_WHITE);
         print_hi_msg_scroll();
         //test_stack_var();
