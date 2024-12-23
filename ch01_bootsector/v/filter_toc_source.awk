@@ -57,4 +57,4 @@ in_bootsector_start {
     gsub("string _const_bootsector__", "string ")
     print
 }
-END { print "#include \"common_surfix" LANG_SURFIX ".h\"" }
+END { print "#include \"common_suffix" LANG_SURFIX ".h\"" }

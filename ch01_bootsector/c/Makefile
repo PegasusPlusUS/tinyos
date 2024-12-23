@@ -21,7 +21,7 @@ FILE_THIS=Makefile
 # CI_PIPE_LINE_START
 # # 1. C to C
 FILE_SOURCE=$(BOOTSECTOR).c
-FILE_SOURCE_DEPENDENCY=common_prefix.h bootsector.h common_surfix.h
+FILE_SOURCE_DEPENDENCY=common_prefix.h bootsector.h common_suffix.h
 #TOC_SOURCE=$(FILE_SOURCE).c
 # COMPILER=v
 # COMPILER2C_FLAGS=-freestanding
@@ -45,7 +45,7 @@ C2O_FLAGS = -m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffr
 		-nostdlib -nostdinc -fno-asynchronous-unwind-tables \
 		-fno-builtin -fno-stack-protector -mno-mmx -mno-sse
 C2ASM_FLAGS = $(C2O_FLAGS) -O0 -S
-C_DEPENDENCIES=common_prefix.h bootsector.h common_surfix.h
+C_DEPENDENCIES=common_prefix.h bootsector.h common_suffix.h
 $(OBJ_INTERMIDIATE): $(TOC_SOURCE_FILTERED) $(C_DEPENDENCIES) $(FILE_THIS)
 	@echo "# Compile c code to object by $(CC)."
 	@$(CC) $(C2O_FLAGS) -o $(OBJ_INTERMIDIATE) -c $(TOC_SOURCE_FILTERED)

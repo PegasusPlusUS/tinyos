@@ -37,8 +37,8 @@ C2O_FLAGS = -m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffr
 		-nostdlib -nostdinc -fno-asynchronous-unwind-tables \
 		-fno-builtin -fno-stack-protector -mno-mmx -mno-sse
 C2ASM_FLAGS = $(C2O_FLAGS) -O0 -S
-C_DEPENDENCIES=../c/common_prefix.h ../c/bootsector.h ../c/common_surfix.h
-C_V_DEPENDENCIES=common_prefix.v.h common_surfix.v.h $(C_DEPENDENCIES)
+C_DEPENDENCIES=../c/common_prefix.h ../c/bootsector.h ../c/common_suffix.h
+C_V_DEPENDENCIES=common_prefix.v.h common_suffix.v.h $(C_DEPENDENCIES)
 $(OBJ_INTERMIDIATE): $(TOC_SOURCE_FILTERED) $(C_V_DEPENDENCIES) $(FILE_THIS)
 	@echo "# Compile processed c code to object by $(CC)."
 	@$(CC) $(C2O_FLAGS) -o $(OBJ_INTERMIDIATE) -c $(TOC_SOURCE_FILTERED)

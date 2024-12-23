@@ -1,1 +1,2 @@
-#include "../v/common_prefix.h"
+#include "../c/common_prefix.h"
+typedef char string[];
