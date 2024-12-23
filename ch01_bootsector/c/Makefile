@@ -92,7 +92,7 @@ build_under_av: $(FILE_TARGET_UNDER_AV) $(FILE_THIS)
 	@$(SHELL) $(SCRIPT_VERIFY_UNDER_AV)
 
 neat:
-	rm -f *.o *.s *.c
+	rm -f *.o *.s
 
 clean: neat
 	rm -f $(FILE_TARGET)
