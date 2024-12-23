@@ -1,3 +1,5 @@
+bootsector.c
 bootsector.elf
 bootsector.o
 bootsector.s
+bootsector.ada.c
