@@ -1,7 +1,9 @@
 BEGIN {
+    LANG_SURFIX = ".v"
+
     in_init_global_allocator = 0
     in_bootsector_start = 0
-    print "#include \"common_prefix.v.h\"\n"
+    print "#include \"common_prefix" LANG_SURFIX ".h\"\n"
 }
 /^init_global_allocator\(\);/ {
     in_init_global_allocator = 1
@@ -55,4 +57,4 @@ in_bootsector_start {
     gsub("string _const_bootsector__", "string ")
     print
 }
-END { print "#include \"common_surfix.v.h\"" }
+END { print "#include \"common_surfix" LANG_SURFIX ".h\"" }
