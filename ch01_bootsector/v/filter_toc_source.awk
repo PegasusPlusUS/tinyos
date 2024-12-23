@@ -39,9 +39,21 @@ in_bootsector_start {
         gsub(/([a-z0-9_]*)\.len/, "sizeof(\1)")
     } else {
         # sed rule s/\\bcommon_bios__([a-z0-9_]*)/\\U&/g' equivalent
-        while (match($0, /common_bios__([_a-z0-9]*)/)) {
+        while (match($0, /common_bios__([_a-z0-9]*)/, matches)) {
             # Extract the matched text
-            matched = substr($0, RSTART + 13, RLENGTH - 13)
+            # How RSTART and RLENGTH Work:
+            # match(string, regex):
+
+            # Searches string for the first occurrence of the regular expression regex.
+            # Sets RSTART and RLENGTH to the position and length of the match, respectively.
+            # Extracting the Match:
+
+            # Use substr(string, RSTART, RLENGTH) to extract the matched substring.
+            # No Match:
+
+            # If the regular expression does not match, RSTART is 0 and RLENGTH is -1.
+            # matched = substr($0, RSTART + 13, RLENGTH - 13)
+            matched = matches[1]        
             # Convert the matched text to uppercase
             replacement = toupper(matched)
             # Replace the matched text with the uppercase version
