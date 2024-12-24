@@ -66,7 +66,7 @@ start:
 ; .no_background:
 ;     mov [adv_msg_color], al
     CALL_PRINT_ADV_SCROLL
-    CALL_QUERY_AND_PRINT_TIME
+    CALL_BIOS_QUERY_AND_PRINT_TIME
     jmp .main_loop
 
 .paused_action:
@@ -76,8 +76,8 @@ start:
 FN_FLASH_PAUSED_DISPLAY
 FN_PRINT_ADV_SCROLL
 FN_BCD_TO_ASCII
-FN_PRINT_STRING
-FN_QUERY_AND_PRINT_TIME
+FN_BIOS_PRINT_STRING_P_MSG
+FN_BIOS_QUERY_AND_PRINT_TIME
 
 ; Data
 hello_msg db 'Hello, bootsector by ASM in busy loop!', 0
