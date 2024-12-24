@@ -8,7 +8,7 @@ Sub BIOS_SET_CURSOR_POS__ROW_COL(ByVal row As Byte, ByVal col As Byte)
     Locate row, col
 End Sub
 
-Sub BIOS_SET_PRINT_COLOR__COLOR(ByVal colour As Byte)
+Sub BIOS_BIOS_SET_PRINT_COLOR_P_COLOR__COLOR(ByVal colour As Byte)
     ' Set the print color
     Color colour
 End Sub

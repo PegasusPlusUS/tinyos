@@ -2,10 +2,10 @@
 # Specific rules and variables for Makefile 2
 LANG_SUFFIX = .nim
 FILE_SOURCE=$(BOOTSECTOR)$(LANG_SUFFIX)
-TOC_SOURCE=$(FILE_SOURCE).c
+FILE_TOC_SOURCE=$(FILE_SOURCE).c
 COMPILER=nim
 COMPILER2C_FLAGS=c --genScript --cc:gcc --compileOnly --out:
-# Makefile 2
+COMPILER2C_POST_PROCESSING=cp ~/nimcache/$(BOOTSECTOR)_d/@m$(FILE_TOC_SOURCE) $(FILE_TOC_SOURCE)
 FILE_SOURCE_ADDITIONAL_DEPENDENCY=
 
 include ../common.mk

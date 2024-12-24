@@ -40,7 +40,7 @@ BEGIN_TIMER_HANDLER;
     if (++delay > 183) {
         delay = 0;
         BIOS_SET_CURSOR_POS__ROW_COL(8, 31);
-        BIOS_SET_PRINT_COLOR__COLOR(COLOR_WHITE);
+        BIOS_BIOS_SET_PRINT_COLOR_P_COLOR__COLOR(COLOR_WHITE);
         print_hi_msg_scroll();
     }
 

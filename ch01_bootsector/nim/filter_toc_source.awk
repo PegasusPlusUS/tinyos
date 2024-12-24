@@ -83,7 +83,7 @@ in_bootsector_start {
         gsub(/\(NU8\)/, " ")
         gsub(/nimln_\([0-9]*\);\t/, "")
         gsub(/__bootsector_u[0-9]*/, "")
-        gsub(/_1_/, "__")
+        #gsub(/_p_/, "__")
     }
     print
 }

@@ -170,7 +170,7 @@ void asm_print_address_as_hex() {\
         asm_set_cursor_pos__row_col();\
     } while (0)
 
-#define BIOS_SET_PRINT_COLOR__COLOR(color) \
+#define BIOS_BIOS_SET_PRINT_COLOR_P_COLOR__COLOR(color) \
     do {\
         _asm_char_1_ = color;\
     } while(0)
