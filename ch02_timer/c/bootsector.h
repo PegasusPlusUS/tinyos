@@ -20,7 +20,7 @@ __asm__(\
     "call asm_set_cursor_pos__row_col\n\t"\
     "movb $10, _asm_char_1_\n\t"\
     "movw $ADV_MSG, _asm_msg_\n\t"\
-    "call asm_print_string__msg_color\n\t"\
+    "call asm_print_string_p_msg_color\n\t"\
 \
     "cli\n\t"\
 \

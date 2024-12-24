@@ -1,4 +1,4 @@
-%include "common_bios.asm"
+;%include "common_bios.asm"
 
 %macro INIT_SEGMENTS 0
     xor ax, ax          ; Clear AX
