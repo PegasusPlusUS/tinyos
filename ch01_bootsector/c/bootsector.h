@@ -67,7 +67,7 @@ void asm_clear_screen() {\
 #define BIOS_CLEAR_SCREEN(_) asm_clear_screen()
 
 #define FN_BIOS_PRINT_STRING__MSG_COLOR \
-void asm_print_string__msg_color() {\
+void asm_print_string_p_msg_color() {\
     __asm__ volatile (\
         ".code16\n\t"\
         "pushal\n\t"\
@@ -145,7 +145,7 @@ void asm_print_address_as_hex() {\
         :\
         :\
     );\
-    BIOS_PRINT_STRING__MSG(_hex_buffer_);\
+    BIOS_PRINT_STRING_P_MSG(_hex_buffer_);\
 }
 
 #define BIOS_GET_ADDRESS_OF_STACK_VAR(stack_var) \
@@ -175,16 +175,16 @@ void asm_print_address_as_hex() {\
         _asm_char_1_ = color;\
     } while(0)
 
-#define BIOS_PRINT_STRING__MSG_COLOR(msg, color)\
+#define BIOS_PRINT_STRING_P_MSG_COLOR(msg, color)\
     do {\
         _asm_char_1_ = color;\
-        BIOS_PRINT_STRING__MSG(msg);\
+        BIOS_PRINT_STRING_P_MSG(msg);\
     } while(0)
 
-#define BIOS_PRINT_STRING__MSG(msg)\
+#define BIOS_PRINT_STRING_P_MSG(msg)\
     do {\
         _asm_msg_ = msg;\
-        asm_print_string__msg_color();\
+        asm_print_string_p_msg_color();\
     } while(0)
 
 #define DATA_BIOS_PARAM \
