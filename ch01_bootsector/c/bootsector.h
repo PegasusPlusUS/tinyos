@@ -164,7 +164,7 @@ void asm_print_address_as_hex() {\
     asm_print_address_as_hex()
 
 //void set_cursor_position(short row, short col) {
-#define BIOS_SET_CURSOR_POS__ROW_COL(row, col) \
+#define BIOS_SET_CURSOR_POS_P_ROW_COL(row, col) \
     do {\
         _asm_char_1_ = row;  _asm_char_2_ = col;\
         asm_set_cursor_pos__row_col();\

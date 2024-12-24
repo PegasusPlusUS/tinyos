@@ -67,7 +67,7 @@ volatile int delay;
 
 void __attribute__((noreturn)) __attribute__((no_instrument_function)) bootsector_main(void) {
     BIOS_CLEAR_SCREEN();
-    BIOS_SET_CURSOR_POS__ROW_COL(12, 27);
+    BIOS_SET_CURSOR_POS_P_ROW_COL(12, 27);
     BIOS_BIOS_SET_PRINT_COLOR_P_COLOR__COLOR(COLOR_GREEN);
     BIOS_PRINT_STRING__MSG(ADV_MSG);
  
@@ -77,7 +77,7 @@ void __attribute__((noreturn)) __attribute__((no_instrument_function)) bootsecto
             __asm__ volatile ("nop");
         }
 
-        BIOS_SET_CURSOR_POS__ROW_COL(9, 33); // 33 = 40 - sizeof(HI_MSG)/2
+        BIOS_SET_CURSOR_POS_P_ROW_COL(9, 33); // 33 = 40 - sizeof(HI_MSG)/2
         BIOS_BIOS_SET_PRINT_COLOR_P_COLOR__COLOR(COLOR_WHITE);
         print_hi_msg_scroll();
         //test_stack_var();
