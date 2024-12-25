@@ -10,7 +10,7 @@
 
 ASM_EPILOG;
 
-FN_BIOS_SET_CURSOR_POS__ROW_COL;
+FN_BIOS_SET_CURSOR_POS_P_ROW_COL;
 
 // Time get_rtc_time(void);
 // void print_time_at(Time time, char row, char col, char color);
@@ -68,7 +68,7 @@ volatile int delay;
 void __attribute__((noreturn)) __attribute__((no_instrument_function)) bootsector_main(void) {
     BIOS_CLEAR_SCREEN();
     BIOS_SET_CURSOR_POS_P_ROW_COL(12, 27);
-    BIOS_BIOS_SET_PRINT_COLOR_P_COLOR__COLOR(COLOR_GREEN);
+    BIOS_BIOS_SET_PRINT_COLOR_P_COLOR(COLOR_GREEN);
     BIOS_PRINT_STRING_P_MSG(ADV_MSG);
  
     while (1) {
@@ -78,7 +78,7 @@ void __attribute__((noreturn)) __attribute__((no_instrument_function)) bootsecto
         }
 
         BIOS_SET_CURSOR_POS_P_ROW_COL(9, 33); // 33 = 40 - sizeof(HI_MSG)/2
-        BIOS_BIOS_SET_PRINT_COLOR_P_COLOR__COLOR(COLOR_WHITE);
+        BIOS_BIOS_SET_PRINT_COLOR_P_COLOR(COLOR_WHITE);
         print_hi_msg_scroll();
         //test_stack_var();
     }

@@ -19,7 +19,7 @@ char HELLO_MSG[] = " C in timer mode! ";
 short _scroll_pos_ = 0;
 
 FN_BIOS_CLEAR_SCREEN;
-FN_BIOS_SET_CURSOR_POS__ROW_COL;
+FN_BIOS_SET_CURSOR_POS_P_ROW_COL;
 FN_BIOS_PRINT_STRING__MSG_COLOR;
 //FN_BIOS_PRINT_ADDRESS_AS_HEX;
 
@@ -40,7 +40,7 @@ BEGIN_TIMER_HANDLER;
     if (++delay > 183) {
         delay = 0;
         BIOS_SET_CURSOR_POS_P_ROW_COL(8, 31);
-        BIOS_BIOS_SET_PRINT_COLOR_P_COLOR__COLOR(COLOR_WHITE);
+        BIOS_BIOS_SET_PRINT_COLOR_P_COLOR(COLOR_WHITE);
         print_hi_msg_scroll();
     }
 

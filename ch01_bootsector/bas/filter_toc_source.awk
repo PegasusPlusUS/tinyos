@@ -46,7 +46,7 @@ in_bootsector_start {
     } else if (/fb_StrDelete/) {
         next
     } else {
-        while (match($0, /fb_StrAssign\( \(void\*\)\&/)) {
+        while (match($0, /fb_StrAssign\( \(void\*\)&/)) {
             if (match($0, /fb_StrAssign\( *\(void\*\)&([A-Za-z_][A-Za-z0-9_$]*) *, *-1ll, *\(void\*\)"([^"]*)".*/, matches)) {
                 # matches[1] contains the variable name
                 # matches[2] contains the string content                
@@ -54,7 +54,7 @@ in_bootsector_start {
             }
             next
         }
-        gsub(/\( \&/, "( ")
+        gsub(/\( &/, "( ")
         gsub(/ \(int8\)/, " ")
     }
     print

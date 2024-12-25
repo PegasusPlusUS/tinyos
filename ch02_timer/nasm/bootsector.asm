@@ -1,8 +1,7 @@
 [BITS 16]
 [ORG 0x7C00]
 
-%include "../../ch01_bootsector/nasm/common.asm"
-%include "common.asm"
+%include "common_timer_isr.asm"
 
 start:
     INIT_SEGMENTS

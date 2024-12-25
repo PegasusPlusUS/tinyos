@@ -14,13 +14,13 @@ __asm__(\
     "movw %ax, %ss\n\t"\
     "movw $0x7C00, %sp\n\t"\
 \
-    "call asm_clear_screen\n\t"\
+    "call asm_bios_clear_screen\n\t"\
     "movb $12, _asm_char_1_\n\t"\
     "movb $27, _asm_char_2_\n\t"\
-    "call asm_set_cursor_pos__row_col\n\t"\
+    "call asm_bios_set_cursor_pos_p_row_col\n\t"\
     "movb $10, _asm_char_1_\n\t"\
     "movw $ADV_MSG, _asm_msg_\n\t"\
-    "call asm_print_string_p_msg_color\n\t"\
+    "call asm_bios_print_string_p_msg_color\n\t"\
 \
     "cli\n\t"\
 \

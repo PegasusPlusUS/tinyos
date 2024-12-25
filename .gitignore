@@ -3,5 +3,7 @@
 **/target/
 **/.zig-cache/
 **/zig-out/
-ch01_bootsector/nim/bootsector.exe
-ch02_timer/c/bootsector.o
+**/bootsector.exe
+**/bootsector.o
+**/bootsector.obj
+**/.obj.obj
