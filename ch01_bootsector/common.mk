@@ -13,7 +13,7 @@
 # To use this common.mk, you need to define the following variables in your Makefile:
 # 1. LANG_SUFFIX: the suffix of the source file, e.g., .nim, .v, .bas, .go, .zig, .swift, .f90
 # 2. EXE_LANG_TO_C_COMPILER: the executable name of the compiler, e.g., nim, v, fbc, fpc, go, zig, swift, gfortran
-# 3. LANG_TO_C_FLAGS: the flags to pass to the compiler, e.g., -r, -freestanding, -c --genScript --cc:gcc --compileOnly --out:
+# 3. FLAGS_LANG_TO_C: the flags to pass to the compiler, e.g., -r, -freestanding, -c --genScript --cc:gcc --compileOnly --out:
 # 4. Optional: FILES_SOURCE_SET: the source files set representation, e.g., . for V
 # 4. Optional: FILES_SOURCE_ADDITIONAL_DEPENDENCIES: the additional dependencies for the source file, e.g., main.v
 # 5. Optional: SCRIPT_LANG_TO_C_POST_PROCESSING: the post processing command to run after the source file is compiled to C,
@@ -56,14 +56,14 @@ BOOTSECTOR=bootsector
 FILES_BUILD_RULES?=Makefile ../common.mk
 
 # Common rules and variables
-CC = i686-elf-gcc
-CC_FLAGS = -m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffreestanding -fno-pie \
+EXE_C_COMPILER=i686-elf-gcc
+FLAGS_CC=-m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffreestanding -fno-pie \
         -nostdlib -nostdinc -fno-asynchronous-unwind-tables \
         -fno-builtin -fno-stack-protector -mno-mmx -mno-sse
-C2O_FLAGS = $(CC_FLAGS) -o 
-C2ASM_FLAGS = $(CC_FLAGS) -O0 -S -o 
-LD = i686-elf-ld
-LD_FLAGS = -T ../c/linker.ld --oformat binary -s
+FLAGS_C_TO_O=$(FLAGS_CC) -o 
+FLAGS_C_TO_ASM=$(FLAGS_CC) -O0 -S -o 
+EXE_LINK=i686-elf-ld
+FLAGS_LINK=-T ../c/linker.ld --oformat binary -s
 
 # CI_PIPE_LINE_START
 FILE_SOURCE?=$(BOOTSECTOR)$(LANG_SUFFIX)
@@ -79,7 +79,7 @@ SCRIPT_LANG_TO_C_POST_PROCESSING?=echo "\# $(FILE_SOURCE) to $(FILE_LANG_TO_C_IN
 FILES_SOURCE_SET?=$(FILE_SOURCE)
 $(FILE_LANG_TO_C_INITIAL_RESULT): $(FILE_SOURCE) $(FILES_SOURCE_DEPENDENCY) $(FILES_SOURCE_ADDITIONAL_DEPENDENCIES) $(FILES_BUILD_RULES)
 	@echo "# Compile $(FILE_TARGET) by $(EXE_LANG_TO_C_COMPILER)."
-	@$(EXE_LANG_TO_C_COMPILER) $(LANG_TO_C_FLAGS)$(FILE_LANG_TO_C_INITIAL_RESULT) $(FILES_SOURCE_SET)
+	@$(EXE_LANG_TO_C_COMPILER) $(FLAGS_LANG_TO_C)$(FILE_LANG_TO_C_INITIAL_RESULT) $(FILES_SOURCE_SET)
 	@$(SCRIPT_LANG_TO_C_POST_PROCESSING)
 
 # 2. Filter C initial to final
@@ -90,47 +90,47 @@ $(FILE_LANG_TO_C_FINAL_RESULT): $(FILE_LANG_TO_C_INITIAL_RESULT) $(SCRIPT_FILTER
 	@echo "# Filter out unneeded code and add necessary reused functions and $(BOOTSECTOR) signature from ../c/$(BOOTSECTOR).h by $(FILTER)."
 	@$(FILTER) -f $(SCRIPT_FILTER_LANG_TOC) $(FILE_LANG_TO_C_INITIAL_RESULT) > $(FILE_LANG_TO_C_FINAL_RESULT)
 else
-FILE_LANG_TO_C_FINAL_RESULT = $(FILE_SOURCE)
+FILE_LANG_TO_C_FINAL_RESULT=$(FILE_SOURCE)
 endif
 
 # 3.0 final C to O
 FILE_OBJ_INTERMIDIATE=$(BOOTSECTOR).o
 FILE_C_TO_ASM_RESULT=$(BOOTSECTOR).s
-C_DEPENDENCIES ?= ../c/common_prefix.h ../c/bootsector.h ../c/common_suffix.h
+C_DEPENDENCIES?=../c/common_prefix.h ../c/bootsector.h ../c/common_suffix.h
 ifndef C_LANG_DEPENDENCIES
-C_LANG_DEPENDENCIES = $(C_DEPENDENCIES)
+C_LANG_DEPENDENCIES=$(C_DEPENDENCIES)
 ifneq ($(LANG_SUFFIX), .c)
-C_LANG_DEPENDENCIES = $(C_DEPENDENCIES) common_prefix$(LANG_SUFFIX).h common_suffix$(LANG_SUFFIX).h
+C_LANG_DEPENDENCIES=$(C_DEPENDENCIES) common_prefix$(LANG_SUFFIX).h common_suffix$(LANG_SUFFIX).h
 endif
 endif
 
 $(FILE_OBJ_INTERMIDIATE): $(FILE_LANG_TO_C_FINAL_RESULT) $(C_LANG_DEPENDENCIES) $(FILES_BUILD_RULES)
 ifneq ($(LANG_SUFFIX), .c)
-	@echo "# Compile processed C code to object by $(CC)."
+	@echo "# Compile processed C code to object by $(EXE_C_COMPILER)."
 else
-	@echo "# Compile C code to object by $(CC)."
+	@echo "# Compile C code to object by $(EXE_C_COMPILER)."
 endif
-	@$(CC) $(C2O_FLAGS)$(FILE_OBJ_INTERMIDIATE) -c $(FILE_LANG_TO_C_FINAL_RESULT)
+	@$(EXE_C_COMPILER) $(FLAGS_C_TO_O)$(FILE_OBJ_INTERMIDIATE) -c $(FILE_LANG_TO_C_FINAL_RESULT)
 
 # 3.1 optional final C to ASM
 $(FILE_C_TO_ASM_RESULT): $(FILE_LANG_TO_C_FINAL_RESULT) $(C_LANG_DEPENDENCIES) $(FILES_BUILD_RULES)
-	@echo "# Generate asm code for checking by $(CC)."
-	@$(CC) $(C2ASM_FLAGS)$(FILE_C_TO_ASM_RESULT) $(FILE_LANG_TO_C_FINAL_RESULT)
+	@echo "# Generate asm code for checking by $(EXE_C_COMPILER)."
+	@$(EXE_C_COMPILER) $(FLAGS_C_TO_ASM)$(FILE_C_TO_ASM_RESULT) $(FILE_LANG_TO_C_FINAL_RESULT)
 
 # 4. Link object to target
 # Link object to binary
 FILE_TARGET=$(BOOTSECTOR).bin
 $(FILE_TARGET): $(FILE_OBJ_INTERMIDIATE) $(FILES_BUILD_RULES)
-	@echo "# Link object to binary by $(LD)."
-	@$(LD) $(LD_FLAGS) -o $(FILE_TARGET) $(FILE_OBJ_INTERMIDIATE)
+	@echo "# Link object to binary by $(EXE_LINK)."
+	@$(EXE_LINK) $(FLAGS_LINK) -o $(FILE_TARGET) $(FILE_OBJ_INTERMIDIATE)
 
 # Verify and test scripts
-SCRIPT_VERIFY ?= ../verify_boot.sh
-SCRIPT_TEST ?= ../test.qemu.sh
+SCRIPT_VERIFY?=../verify_boot.sh
+SCRIPT_TEST?=../test.qemu.sh
 
 # Build and run targets
 build: $(FILE_TARGET) $(FILES_BUILD_RULES)
-	@echo "# Build $(FILE_TARGET) by $(EXE_LANG_TO_C_COMPILER)/$(CC)/$(LD) succeeded!"
+	@echo "# Build $(FILE_TARGET) by $(EXE_LANG_TO_C_COMPILER)/$(EXE_C_COMPILER)/$(EXE_LINK) succeeded!"
 	@echo "# Verify $(FILE_TARGET) is valid $(BOOTSECTOR)."
 	@$(SHELL) $(SCRIPT_VERIFY)
 
