@@ -1,3 +1,5 @@
+# TODO: reuse common.mk
+
 .SUFFIXES:
 
 all: run
@@ -9,24 +11,24 @@ SHELL=/usr/bin/bash
 BOOTSECTOR=bootsector
 FILE_TARGET=$(BOOTSECTOR).bin
 FILE_SOURCE=$(BOOTSECTOR).asm
-FILE_SOURCE_DEPENDENCY=common.asm
-FILE_SOURCE_ADDITIONAL_DEPENDENCY=common_bios.asm
-FILE_THIS=Makefile
-COMPILER=nasm
+FILES_SOURCE_DEPENDENCIES=common.asm
+FILES_SOURCE_ADDITIONAL_DEPENDENCIES=common_bios.asm
+FILES_BUILD_RULES=Makefile
+EXE_LANG_TO_C_COMPILER=nasm
 COMPILER2TARGET_FLAGS=-o
 SCRIPT_VERIFY=../verify_boot.sh
 SCRIPT_TEST=../test.qemu.sh
 
-$(FILE_TARGET) : $(FILE_SOURCE) $(FILE_SOURCE_DEPENDENCY) $(FILE_SOURCE_ADDITIONAL_DEPENDENCY) $(FILE_THIS)
-	@echo "\# Compile $(FILE_SOURCE) to $(FILE_TARGET) by $(COMPILER)"
-	@$(COMPILER) $(COMPILER2TARGET_FLAGS) $(FILE_TARGET) $(FILE_SOURCE)
+$(FILE_TARGET) : $(FILE_SOURCE) $(FILES_SOURCE_DEPENDENCIES) $(FILES_SOURCE_ADDITIONAL_DEPENDENCIES) $(FILES_BUILD_RULES)
+	@echo "# Compile $(FILE_SOURCE) to $(FILE_TARGET) by $(EXE_LANG_TO_C_COMPILER)"
+	@$(EXE_LANG_TO_C_COMPILER) $(COMPILER2TARGET_FLAGS) $(FILE_TARGET) $(FILE_SOURCE)
 	
-build : $(FILE_TARGET) $(FILE_THIS)
-	@echo "\# Verify target is bootable"
+build : $(FILE_TARGET) $(FILES_BUILD_RULES)
+	@echo "# Verify target is bootable"
 	@$(SHELL) $(SCRIPT_VERIFY)
 
 run : build
-	@echo "run QEMU with 1M memory to load $(FILE_TARGET) as disk image for boot device"
+	@echo "# Run QEMU with 1M memory to load $(FILE_TARGET) as disk image for boot device"
 	@$(SHELL) $(SCRIPT_TEST)
 
 clean :

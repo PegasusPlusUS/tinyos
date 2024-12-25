@@ -1,106 +1,108 @@
-# CC = i686-elf-gcc
-# CFLAGS = -m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffreestanding -fno-pie \
+include ../common.mk
+
+# # EXE_C_COMPILER = i686-elf-gcc
+# # CFLAGS = -m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffreestanding -fno-pie \
+# # 		-nostdlib -nostdinc -fno-asynchronous-unwind-tables \
+# # 		-fno-builtin -fno-stack-protector -mno-mmx -mno-sse
+# # ASMFLAGS = -m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffreestanding -fno-pie \
+# # 		-nostdlib -nostdinc -fno-asynchronous-unwind-tables \
+# # 		-fno-builtin -fno-stack-protector -mno-mmx -mno-sse -O0 -S 
+
+# # Disable default rules by overriding them with empty rules
+# .SUFFIXES:
+
+# all: run
+
+# .PHONY : run build net clean run_under_av check_asm
+
+# SHELL=/usr/bin/bash
+
+# BOOTSECTOR=bootsector
+# FILES_BUILD_RULES=Makefile
+
+# # CI_PIPE_LINE_START
+# # # 1. C to C
+# FILE_SOURCE=$(BOOTSECTOR).c
+# FILES_SOURCE_DEPENDENCIES=common_prefix.h bootsector.h common_suffix.h
+# #FILE_LANG_TO_C_INITIAL_RESULT=$(FILE_SOURCE).c
+# # EXE_LANG_TO_C_COMPILER=v
+# # FLAGS_LANG_TO_C=-freestanding
+# # $(FILE_LANG_TO_C_INITIAL_RESULT): $(FILE_SOURCE) $(FILES_SOURCE_DEPENDENCIES) $(FILES_BUILD_RULES)
+# # 	@echo "# Compile $(FILE_TARGET) by $(EXE_LANG_TO_C_COMPILER)."
+# # 	@$(EXE_LANG_TO_C_COMPILER) $(FLAGS_LANG_TO_C) -o $(FILE_LANG_TO_C_INITIAL_RESULT) .
+
+# # # 2. Filter C
+# FILE_LANG_TO_C_FINAL_RESULT=$(BOOTSECTOR).c
+# # FILTER=awk
+# # SCRIPT_FILTER_LANG_TOC=filter_toc_source.awk
+# # $(FILE_LANG_TO_C_FINAL_RESULT): $(FILE_LANG_TO_C_INITIAL_RESULT) $(SCRIPT_FILTER_LANG_TOC) $(FILES_BUILD_RULES)
+# # 	@echo "# Filter out unneeded code and add necessary reused functions and $(BOOTSECTOR) signature from ../c/$(BOOTSECTOR).h by $(FILTER)."
+# # 	@$(FILTER) -f $(SCRIPT_FILTER_LANG_TOC) $(FILE_LANG_TO_C_INITIAL_RESULT) > $(FILE_LANG_TO_C_FINAL_RESULT)
+
+# # 3. C to O
+# FILE_OBJ_INTERMIDIATE=$(BOOTSECTOR).o
+# FILE_C_TO_ASM_RESULT=$(BOOTSECTOR).s
+# EXE_C_COMPILER = i686-elf-gcc
+# FLAGS_C_TO_O = -m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffreestanding -fno-pie \
 # 		-nostdlib -nostdinc -fno-asynchronous-unwind-tables \
 # 		-fno-builtin -fno-stack-protector -mno-mmx -mno-sse
-# ASMFLAGS = -m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffreestanding -fno-pie \
-# 		-nostdlib -nostdinc -fno-asynchronous-unwind-tables \
-# 		-fno-builtin -fno-stack-protector -mno-mmx -mno-sse -O0 -S 
+# FLAGS_C_TO_ASM = $(FLAGS_C_TO_O) -O0 -S
+# C_DEPENDENCIES=common_prefix.h bootsector.h common_suffix.h
+# $(FILE_OBJ_INTERMIDIATE): $(FILE_LANG_TO_C_FINAL_RESULT) $(C_DEPENDENCIES) $(FILES_BUILD_RULES)
+# 	@echo "# Compile c code to object by $(EXE_C_COMPILER)."
+# 	@$(EXE_C_COMPILER) $(FLAGS_C_TO_O) -o $(FILE_OBJ_INTERMIDIATE) -c $(FILE_LANG_TO_C_FINAL_RESULT)
+# $(FILE_C_TO_ASM_RESULT): $(FILE_LANG_TO_C_FINAL_RESULT) $(FILES_BUILD_RULES)
+# 	@echo "# Generate asm code for checking by $(EXE_C_COMPILER)."
+# 	@$(EXE_C_COMPILER) $(FLAGS_C_TO_ASM) -o $(FILE_C_TO_ASM_RESULT) $(FILE_LANG_TO_C_FINAL_RESULT)
 
-# Disable default rules by overriding them with empty rules
-.SUFFIXES:
+# EXE_LINK=i686-elf-ld
+# FLAGS_LINK=-T linker.ld --oformat binary -s
 
-all: run
+# FILE_TARGET=$(BOOTSECTOR).bin
+# $(FILE_TARGET): $(FILE_OBJ_INTERMIDIATE) $(FILES_BUILD_RULES)
+# 	@echo "# Link object to binary by $(EXE_LINK)."
+# 	@$(EXE_LINK) $(FLAGS_LINK) -o $(FILE_TARGET) $(FILE_OBJ_INTERMIDIATE)
 
-.PHONY : run build net clean run_under_av check_asm
+# SCRIPT_VERIFY=../verify_boot.sh
+# SCRIPT_TEST=../test.qemu.sh
 
-SHELL=/usr/bin/bash
-
-BOOTSECTOR=bootsector
-FILE_THIS=Makefile
-
-# CI_PIPE_LINE_START
-# # 1. C to C
-FILE_SOURCE=$(BOOTSECTOR).c
-FILE_SOURCE_DEPENDENCY=common_prefix.h bootsector.h common_suffix.h
-#FILE_TOC_SOURCE=$(FILE_SOURCE).c
-# COMPILER=v
-# COMPILER2C_FLAGS=-freestanding
-# $(FILE_TOC_SOURCE): $(FILE_SOURCE) $(FILE_SOURCE_DEPENDENCY) $(FILE_THIS)
-# 	@echo "# Compile $(FILE_TARGET) by $(COMPILER)."
-# 	@$(COMPILER) $(COMPILER2C_FLAGS) -o $(FILE_TOC_SOURCE) .
-
-# # 2. Filter C
-TOC_SOURCE_FILTERED=$(BOOTSECTOR).c
-# FILTER=awk
-# SCRIPT_FILTER_TOC_SOURCE=filter_toc_source.awk
-# $(TOC_SOURCE_FILTERED): $(FILE_TOC_SOURCE) $(SCRIPT_FILTER_TOC_SOURCE) $(FILE_THIS)
-# 	@echo "# Filter out unneeded code and add necessary reused functions and $(BOOTSECTOR) signature from ../c/$(BOOTSECTOR).h by $(FILTER)."
-# 	@$(FILTER) -f $(SCRIPT_FILTER_TOC_SOURCE) $(FILE_TOC_SOURCE) > $(TOC_SOURCE_FILTERED)
-
-# 3. C to O
-OBJ_INTERMIDIATE=$(BOOTSECTOR).o
-TOASM_SOURCE=$(BOOTSECTOR).s
-CC = i686-elf-gcc
-C2O_FLAGS = -m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffreestanding -fno-pie \
-		-nostdlib -nostdinc -fno-asynchronous-unwind-tables \
-		-fno-builtin -fno-stack-protector -mno-mmx -mno-sse
-C2ASM_FLAGS = $(C2O_FLAGS) -O0 -S
-C_DEPENDENCIES=common_prefix.h bootsector.h common_suffix.h
-$(OBJ_INTERMIDIATE): $(TOC_SOURCE_FILTERED) $(C_DEPENDENCIES) $(FILE_THIS)
-	@echo "# Compile c code to object by $(CC)."
-	@$(CC) $(C2O_FLAGS) -o $(OBJ_INTERMIDIATE) -c $(TOC_SOURCE_FILTERED)
-$(TOASM_SOURCE): $(TOC_SOURCE_FILTERED) $(FILE_THIS)
-	@echo "# Generate asm code for checking by $(CC)."
-	@$(CC) $(C2ASM_FLAGS) -o $(TOASM_SOURCE) $(TOC_SOURCE_FILTERED)
-
-LD=i686-elf-ld
-LD_FLAGS=-T linker.ld --oformat binary -s
-
-FILE_TARGET=$(BOOTSECTOR).bin
-$(FILE_TARGET): $(OBJ_INTERMIDIATE) $(FILE_THIS)
-	@echo "# Link object to binary by $(LD)."
-	@$(LD) $(LD_FLAGS) -o $(FILE_TARGET) $(OBJ_INTERMIDIATE)
-
-SCRIPT_VERIFY=../verify_boot.sh
-SCRIPT_TEST=../test.qemu.sh
-
-FILE_TARGET_UNDER_AV=$(FILE_TARGET).pz
-PB_HOLDER=../.pipe/pb_holder/target/release/pb_holder.exe
-$(FILE_TARGET_UNDER_AV): $(OBJ_INTERMIDIATE) $(FILE_THIS)
-	@echo "# Start $(PB_HOLDER) to pack $(FILE_TARGET) as $(FILE_TARGET_UNDER_AV)."
-	@$(PB_HOLDER) p2f $(FILE_TARGET) $(FILE_TARGET_UNDER_AV)
-	@echo "# Link object to binary by $(LD)."
-	@$(LD) $(LD_FLAGS) -o $($(PB_HOLDER) p2f) $(OBJ_INTERMIDIATE)
-SCRIPT_VERIFY_UNDER_AV=../verify_boot.under_av.sh
-SCRIPT_TEST_UNDER_AV=../test.under_av.qemu.sh
-# CI_PIPE_LINE_END
+# FILE_TARGET_UNDER_AV=$(FILE_TARGET).pz
+# PB_HOLDER=../.pipe/pb_holder/target/release/pb_holder.exe
+# $(FILE_TARGET_UNDER_AV): $(FILE_OBJ_INTERMIDIATE) $(FILES_BUILD_RULES)
+# 	@echo "# Start $(PB_HOLDER) to pack $(FILE_TARGET) as $(FILE_TARGET_UNDER_AV)."
+# 	@$(PB_HOLDER) p2f $(FILE_TARGET) $(FILE_TARGET_UNDER_AV)
+# 	@echo "# Link object to binary by $(EXE_LINK)."
+# 	@$(EXE_LINK) $(FLAGS_LINK) -o $($(PB_HOLDER) p2f) $(FILE_OBJ_INTERMIDIATE)
+# SCRIPT_VERIFY_UNDER_AV=../verify_boot.under_av.sh
+# SCRIPT_TEST_UNDER_AV=../test.under_av.qemu.sh
+# # CI_PIPE_LINE_END
 
 
-check_asm: $(TOASM_SOURCE) $(FILE_THIS)
-	@echo "# Opening file in Visual Studio Code... "
-	@code $(TOASM_SOURCE)
-	# @ls -l $(TOASM_SOURCE)
+# check_asm: $(FILE_C_TO_ASM_RESULT) $(FILES_BUILD_RULES)
+# 	@echo "# Opening file in Visual Studio Code... "
+# 	@code $(FILE_C_TO_ASM_RESULT)
+# 	# @ls -l $(FILE_C_TO_ASM_RESULT)
 
-build: $(FILE_TARGET) $(FILE_THIS)
-	@echo "# Build $(FILE_TARGET) by $(COMPILER)/$(CC)/$(LD) succeeded!"
-	@echo "# Verify $(FILE_TARGET) is valid $(BOOTSECTOR)."
-	@$(SHELL) $(SCRIPT_VERIFY)
+# build: $(FILE_TARGET) $(FILES_BUILD_RULES)
+# 	@echo "# Build $(FILE_TARGET) by $(EXE_LANG_TO_C_COMPILER)/$(EXE_C_COMPILER)/$(EXE_LINK) succeeded!"
+# 	@echo "# Verify $(FILE_TARGET) is valid $(BOOTSECTOR)."
+# 	@$(SHELL) $(SCRIPT_VERIFY)
 
-build_under_av: $(FILE_TARGET_UNDER_AV) $(FILE_THIS)
-	@echo "# Build $(FILE_TARGET_UNDER_AV) by $(COMPILER)/$(CC)/$(LD)/$(PB_HOLDER) succeeded!"
-	@echo "# Verify $(FILE_TARGET_UNDER_AV) is valid $(BOOTSECTOR)."
-	@$(SHELL) $(SCRIPT_VERIFY_UNDER_AV)
+# build_under_av: $(FILE_TARGET_UNDER_AV) $(FILES_BUILD_RULES)
+# 	@echo "# Build $(FILE_TARGET_UNDER_AV) by $(EXE_LANG_TO_C_COMPILER)/$(EXE_C_COMPILER)/$(EXE_LINK)/$(PB_HOLDER) succeeded!"
+# 	@echo "# Verify $(FILE_TARGET_UNDER_AV) is valid $(BOOTSECTOR)."
+# 	@$(SHELL) $(SCRIPT_VERIFY_UNDER_AV)
 
-neat:
-	rm -f *.o *.s
+# neat:
+# 	rm -f *.o *.s
 
-clean: neat
-	rm -f $(FILE_TARGET)
+# clean: neat
+# 	rm -f $(FILE_TARGET)
 
-run: build
-	@echo "# Run QEMU VM with 1M memory to load $(FILE_TARGET) as disk image for boot device"
-	$(SHELL) $(SCRIPT_TEST)
+# run: build
+# 	@echo "# Run QEMU VM with 1M memory to load $(FILE_TARGET) as disk image for boot device"
+# 	$(SHELL) $(SCRIPT_TEST)
 
-run_under_av: build_under_av
-	@#../.pipe/pb_holder/target/release/pb_holder.exe f2p bootsector.bin.pz tinyos_bootsector_provider
-	$(SHELL) $(SCRIPT_TEST_UNDER_AV)
+# run_under_av: build_under_av
+# 	@#../.pipe/pb_holder/target/release/pb_holder.exe f2p bootsector.bin.pz tinyos_bootsector_provider
+# 	$(SHELL) $(SCRIPT_TEST_UNDER_AV)

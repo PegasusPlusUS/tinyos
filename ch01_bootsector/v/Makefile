@@ -1,7 +1,7 @@
 LANG_SUFFIX = .v
 FILES_SOURCE_SET = .
 EXE_LANG_TO_C_COMPILER=v
-LANG_TO_C_FLAGS=-freestanding -o 
+FLAGS_LANG_TO_C=-freestanding -o 
 FILES_SOURCE_ADDTIONAL_DEPENDENCIES = main.v
 
 include ../common.mk
