@@ -1,11 +1,47 @@
 # common.mk
 # TODO: Need IA16-elf-gcc, IA16-elf-ld, and IA16-elf-as, otherwise, function can not take param. Current BIOS_xxx are all macros,
 # 	which are not function, they uses fixed static memory to pass param to asm functions, not stack (i686-elf-gcc has bug that uses 32bit stack register which cause trouble in bootsector 16bit real mode).
-# Lang -> C path
-# Lang -> lib.a path
-# Lang -> ASM path
-# Lang -> WASM path
-# Lang -> LLVMIR path
+#   or try initialize 32bit ss and esp to see if that can work.
+#
+# Lang -> C path, v/bas/nim ready, f90, pascal (with p2c on Linux)
+# Lang -> lib.a path, swift. go and c can not access memory directly, must use function call, which will be ready after ia16-toolchain is ready or init 32bit ss/esp works. This path might not possible for the size of the code.
+# Lang -> ASM path, pascal (generate asm)
+# Lang -> WASM path, VM translate to C, zig, tinygo, moonbit
+# Lang -> LLVMIR path, LLVMIR to C, or LLVMIR to ASM?
+#
+
+# To use this common.mk, you need to define the following variables in your Makefile:
+# 1. LANG_SUFFIX: the suffix of the source file, e.g., .nim, .v, .bas, .go, .zig, .swift, .f90
+# 2. EXE_LANG_TO_C_COMPILER: the executable name of the compiler, e.g., nim, v, fbc, fpc, go, zig, swift, gfortran
+# 3. LANG_TO_C_FLAGS: the flags to pass to the compiler, e.g., -r, -freestanding, -c --genScript --cc:gcc --compileOnly --out:
+# 4. Optional: FILES_SOURCE_SET: the source files set representation, e.g., . for V
+# 4. Optional: FILES_SOURCE_ADDITIONAL_DEPENDENCIES: the additional dependencies for the source file, e.g., main.v
+# 5. Optional: SCRIPT_LANG_TO_C_POST_PROCESSING: the post processing command to run after the source file is compiled to C,
+#   e.g., cp ~/nimcache/$(BOOTSECTOR)_d/@m$(FILE_LANG_TO_C_INITIAL_RESULT) $(FILE_LANG_TO_C_INITIAL_RESULT) 
+# 6. Optional: C_DEPENDENCIES: the dependencies for the C code, e.g., ../c/common_prefix.h ../c/bootsector.h ../c/common_suffix.h
+# 7. Optional: C_LANG_DEPENDENCIES: the dependencies for the C code, e.g., common_prefix$(LANG_SUFFIX).h common_suffix$(LANG_SUFFIX).h $(C_DEPENDENCIES)
+# 8. Optional: BYPASS_LANG_TOC; c will use this to directly compile to object file, bypassing the lang to c step.
+#
+# common.mk assumes:
+# 1. There is a filter_toc_source.awk file to filter initial C code to final C code.
+# 2. There is a common_prefix$(LANG_SUFFIX).h, common_suffix$(LANG_SUFFIX).h, and common_bios$(LANG_SUFFIX) file.
+# 3. The final C code will be compiled to an object file, and then linked to a binary file as target which named 'bootsector.bin'.
+# 4. The target file will be verified by a verify script, and then tested by a test script to start QEMU VM load target as bootsector.
+# 5. Under AV, the target file will be packed as a .pz file, and then verified by a verify script, and then tested by a test script to start QEMU VM load target as bootsector.
+#
+# common.mk provides the following targets:
+# 1. default: the run target will build the binary file, verify it, and then run it.
+# 2. build: the build target will build the binary file, verif it.
+# 3. build_under_av: the build_under_av target will build the packed binary file, verify it.
+# 4. run_under_av: the run_under_av target will build the packed binary file, verify it, and then run it.
+# 5. neat: the neat target will remove all intermediate files.
+# 6. clean: the clean target will remove all intermediate files and the target file.
+# 7. check_asm: sometimes, you may want to check the generated asm code to debug ridiculous bug, for example,
+#   currently i686-elf-gcc can't always generate 16bit asm code, especially, it uses 32bit stack registers for
+#   params, which causes accessing the stack variable or passing param to function hang the VM. You can use
+#   this target to generate the asm code for deep debugging.
+#
+
 
 # Disable default rules by overriding them with empty rules
 .SUFFIXES:
@@ -14,10 +50,10 @@ all: run
 
 .PHONY : run build neat clean run_under_av check_asm
 
-SHELL ?= /usr/bin/bash
+SHELL?=/usr/bin/bash
 
 BOOTSECTOR=bootsector
-FILES_BUILDRULES ?= Makefile ../common.mk
+FILES_BUILD_RULES?=Makefile ../common.mk
 
 # Common rules and variables
 CC = i686-elf-gcc
@@ -30,44 +66,61 @@ LD = i686-elf-ld
 LD_FLAGS = -T ../c/linker.ld --oformat binary -s
 
 # CI_PIPE_LINE_START
+FILE_SOURCE?=$(BOOTSECTOR)$(LANG_SUFFIX)
+FILES_SOURCE_DEPENDENCY?=common_bios$(LANG_SUFFIX)
+# When LANG_SUFFIX is .c, skip the rules for Lang to C initial and Filter C initial to final
+# No need to define FILE_LANG_TO_C_FINAL_RESULT or any related rules
+ifneq ($(LANG_SUFFIX), .c)
 # 1. Lang to C initial
-# Define FILE_SOURCE and FILE_LANG_TOC_INITIAL_RESULT
-FILE_SOURCE ?= $(BOOTSECTOR)$(LANG_SUFFIX)
-FILES_SOURCE_DEPENDENCIES ?= common_bios$(LANG_SUFFIX)
-FILE_LANG_TOC_INITIAL_RESULT ?= $(FILE_SOURCE).c
-SCRIPT_LANG_TOC_POST_PROCESSING ?= echo "\# $(FILE_SOURCE) to $(FILE_LANG_TOC_INITIAL_RESULT) succeeded!"
-# Rule to build FILE_LANG_TOC_INITIAL_RESULT
-$(FILE_LANG_TOC_INITIAL_RESULT): $(FILE_SOURCE) $(FILES_SOURCE_DEPENDENCIES) $(FILES_SOURCE_ADDITIONAL_DEPENDENCY) $(FILES_BUILDRULES)
-	@echo "# Compile $(FILE_TARGET) by $(EXE_LANG_TOC_COMPILER)."
-	@$(EXE_LANG_TOC_COMPILER) $(LANG2C_FLAGS)$(FILE_LANG_TOC_INITIAL_RESULT) $(FILE_SOURCE)
-	@$(SCRIPT_LANG_TOC_POST_PROCESSING)
+# Define FILE_SOURCE and FILE_LANG_TO_C_INITIAL_RESULT
+FILE_LANG_TO_C_INITIAL_RESULT?=$(FILE_SOURCE).c
+SCRIPT_LANG_TO_C_POST_PROCESSING?=echo "\# $(FILE_SOURCE) to $(FILE_LANG_TO_C_INITIAL_RESULT) succeeded!"
+# Rule to build FILE_LANG_TO_C_INITIAL_RESULT
+FILES_SOURCE_SET?=$(FILE_SOURCE)
+$(FILE_LANG_TO_C_INITIAL_RESULT): $(FILE_SOURCE) $(FILES_SOURCE_DEPENDENCY) $(FILES_SOURCE_ADDITIONAL_DEPENDENCIES) $(FILES_BUILD_RULES)
+	@echo "# Compile $(FILE_TARGET) by $(EXE_LANG_TO_C_COMPILER)."
+	@$(EXE_LANG_TO_C_COMPILER) $(LANG_TO_C_FLAGS)$(FILE_LANG_TO_C_INITIAL_RESULT) $(FILES_SOURCE_SET)
+	@$(SCRIPT_LANG_TO_C_POST_PROCESSING)
 
 # 2. Filter C initial to final
-FILE_LANG_TOC_FINAL_RESULT=$(BOOTSECTOR).c
+FILE_LANG_TO_C_FINAL_RESULT=$(BOOTSECTOR).c
 FILTER=awk
 SCRIPT_FILTER_LANG_TOC=filter_toc_source.awk
-$(FILE_LANG_TOC_FINAL_RESULT): $(FILE_LANG_TOC_INITIAL_RESULT) $(SCRIPT_FILTER_LANG_TOC) $(FILES_BUILDRULES)
+$(FILE_LANG_TO_C_FINAL_RESULT): $(FILE_LANG_TO_C_INITIAL_RESULT) $(SCRIPT_FILTER_LANG_TOC) $(FILES_BUILD_RULES)
 	@echo "# Filter out unneeded code and add necessary reused functions and $(BOOTSECTOR) signature from ../c/$(BOOTSECTOR).h by $(FILTER)."
-	@$(FILTER) -f $(SCRIPT_FILTER_LANG_TOC) $(FILE_LANG_TOC_INITIAL_RESULT) > $(FILE_LANG_TOC_FINAL_RESULT)
+	@$(FILTER) -f $(SCRIPT_FILTER_LANG_TOC) $(FILE_LANG_TO_C_INITIAL_RESULT) > $(FILE_LANG_TO_C_FINAL_RESULT)
+else
+FILE_LANG_TO_C_FINAL_RESULT = $(FILE_SOURCE)
+endif
 
 # 3.0 final C to O
 FILE_OBJ_INTERMIDIATE=$(BOOTSECTOR).o
-FILE_CTOASM_RESULT=$(BOOTSECTOR).s
+FILE_C_TO_ASM_RESULT=$(BOOTSECTOR).s
 C_DEPENDENCIES ?= ../c/common_prefix.h ../c/bootsector.h ../c/common_suffix.h
-C_LANG_DEPENDENCIES ?= common_prefix$(LANG_SUFFIX).h common_suffix$(LANG_SUFFIX).h $(C_DEPENDENCIES)
-$(FILE_OBJ_INTERMIDIATE): $(FILE_LANG_TOC_FINAL_RESULT) $(C_LANG_DEPENDENCIES) $(FILES_BUILDRULES)
-	@echo "# Compile processed c code to object by $(CC)."
-	@$(CC) $(C2O_FLAGS)$(FILE_OBJ_INTERMIDIATE) -c $(FILE_LANG_TOC_FINAL_RESULT)
+ifndef C_LANG_DEPENDENCIES
+C_LANG_DEPENDENCIES = $(C_DEPENDENCIES)
+ifneq ($(LANG_SUFFIX), .c)
+C_LANG_DEPENDENCIES = $(C_DEPENDENCIES) common_prefix$(LANG_SUFFIX).h common_suffix$(LANG_SUFFIX).h
+endif
+endif
+
+$(FILE_OBJ_INTERMIDIATE): $(FILE_LANG_TO_C_FINAL_RESULT) $(C_LANG_DEPENDENCIES) $(FILES_BUILD_RULES)
+ifneq ($(LANG_SUFFIX), .c)
+	@echo "# Compile processed C code to object by $(CC)."
+else
+	@echo "# Compile C code to object by $(CC)."
+endif
+	@$(CC) $(C2O_FLAGS)$(FILE_OBJ_INTERMIDIATE) -c $(FILE_LANG_TO_C_FINAL_RESULT)
 
 # 3.1 optional final C to ASM
-$(FILE_CTOASM_RESULT): $(FILE_LANG_TOC_FINAL_RESULT) $(FILES_BUILDRULES)
+$(FILE_C_TO_ASM_RESULT): $(FILE_LANG_TO_C_FINAL_RESULT) $(C_LANG_DEPENDENCIES) $(FILES_BUILD_RULES)
 	@echo "# Generate asm code for checking by $(CC)."
-	@$(CC) $(C2ASM_FLAGS)$(FILE_CTOASM_RESULT) $(FILE_LANG_TOC_FINAL_RESULT)
+	@$(CC) $(C2ASM_FLAGS)$(FILE_C_TO_ASM_RESULT) $(FILE_LANG_TO_C_FINAL_RESULT)
 
 # 4. Link object to target
 # Link object to binary
 FILE_TARGET=$(BOOTSECTOR).bin
-$(FILE_TARGET): $(FILE_OBJ_INTERMIDIATE) $(FILES_BUILDRULES)
+$(FILE_TARGET): $(FILE_OBJ_INTERMIDIATE) $(FILES_BUILD_RULES)
 	@echo "# Link object to binary by $(LD)."
 	@$(LD) $(LD_FLAGS) -o $(FILE_TARGET) $(FILE_OBJ_INTERMIDIATE)
 
@@ -76,13 +129,20 @@ SCRIPT_VERIFY ?= ../verify_boot.sh
 SCRIPT_TEST ?= ../test.qemu.sh
 
 # Build and run targets
-build: $(FILE_TARGET) $(FILES_BUILDRULES)
-	@echo "# Build $(FILE_TARGET) by $(EXE_LANG_TOC_COMPILER)/$(CC)/$(LD) succeeded!"
+build: $(FILE_TARGET) $(FILES_BUILD_RULES)
+	@echo "# Build $(FILE_TARGET) by $(EXE_LANG_TO_C_COMPILER)/$(CC)/$(LD) succeeded!"
 	@echo "# Verify $(FILE_TARGET) is valid $(BOOTSECTOR)."
 	@$(SHELL) $(SCRIPT_VERIFY)
 
+check_asm: $(FILE_C_TO_ASM_RESULT) $(FILES_BUILD_RULES)
+	@echo "# Check $(FILE_C_TO_ASM_RESULT) for debugging."
+	@code $(FILE_C_TO_ASM_RESULT)
+
 neat:
-	rm -f *.o *.s *.c
+	rm -f *.o *.s *.pz
+ifneq ($(LANG_SUFFIX), .c)
+	rm -f *.c
+endif
 
 clean: neat
 	rm -f $(FILE_TARGET)
