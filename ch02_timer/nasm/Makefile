@@ -1,5 +1,5 @@
 bootsector.bin : bootsector.asm common.asm ../../ch01_bootsector/nasm/common.asm
-	nasm bootsector.asm -o bootsector.bin
+	nasm -I ../../ch01_bootsector/nasm -o bootsector.bin bootsector.asm
 
 build : bootsector.bin
 	echo "run nasm to build bootsector.bin"

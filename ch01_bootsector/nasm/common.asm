@@ -6,6 +6,7 @@
     mov es, ax          ; Set ES=0
     mov ss, ax          ; Set SS=0
     mov sp, 0x7C00      ; Set stack pointer just below where we're loaded
+    mov esp, 0x00007C00 ; Set 32bit stack pointer to the same address, how about segment selector?
 %endmacro
 
 %macro FN_BCD_TO_ASCII 0
@@ -26,10 +27,10 @@ bcd_to_ascii:
 
 ; dh: row, dl: column, bl: color, si: string
 %macro PRINT_STRING_COLOR 4
-    SET_PRINT_POSITION %1, %2
-    SET_PRINT_COLOR %3
+    BIOS_SET_PRINT_POSITION_P_ROW_COL %1, %2
+    BIOS_SET_PRINT_COLOR_P_COLOR %3
     mov si, %4           ; String
-    call print_string
+    call bios_print_string
 %endmacro
 
 %macro DATA_TIME_STR 0
@@ -49,7 +50,7 @@ turn_on_msg_color db 0x0A
 %endmacro
 
 %macro DATA_ADV 0
-adv_msg db 'Open source tutorial at github:pegasusplus/tinyos ', 0
+adv_msg db ' Tutorial at gh:pegasusplus/tinyos ', 0
 adv_msg_len dw $ - adv_msg - 1
 ;adv_msg_len equ $ - adv_msg - 1
 adv_msg_row db 6
@@ -87,14 +88,14 @@ print_adv_scroll:
     ; save char at scroll_pos
     mov al, byte [si]
     mov [char_at_scroll_pos], al
-    call print_string
+    call bios_print_string
 ; Continue print from beginning to scroll_pos
     mov si, adv_msg
     add si, [scroll_pos]
     mov byte [si], 0
     ; print from beginning to scroll_pos
     mov si, adv_msg
-    call print_string
+    call bios_print_string
     ; restore char at scroll_pos
     mov si, adv_msg
     add si, [scroll_pos]
@@ -122,13 +123,13 @@ flash_paused_display:
     jz clear_paused     ; If is_paused_display is 0, clear the message
 
     ; Display "Paused" message
-    SET_PRINT_COLOR [paused_msg_color]
+    BIOS_SET_PRINT_COLOR_P_COLOR [paused_msg_color]
     jmp print_pause_msg_pos
 
 clear_paused:
 ; Clear the "Paused" message (separate function)
-    SET_PRINT_COLOR 0x00        ; Black color (clear text)
+    BIOS_SET_PRINT_COLOR_P_COLOR 0x00        ; Black color (clear text)
 print_pause_msg_pos:
-    PRINT_STRING_POS [paused_msg_row], [paused_msg_col], paused_msg
+    BIOS_PRINT_STRING_POS_P_ROW_COL_MSG [paused_msg_row], [paused_msg_col], paused_msg
     ret
 %endmacro

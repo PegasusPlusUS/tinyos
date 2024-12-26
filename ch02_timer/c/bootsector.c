@@ -1,7 +1,7 @@
 // It's EXTREMELY HARD to REALIABLE pass param to 16bit inline asm (GPT said and many AI struggled and failed)
 // So we choose using shared data to pass params. EVEN C code function param passing is not working!!!!!! So
 // we have to use macro
-// CC = i686-elf-gcc
+// EXE_C_COMPILER = i686-elf-gcc
 // CFLAGS = -m16 -ffreestanding -fno-pie \
 //          -nostdlib -nostdinc -fno-asynchronous-unwind-tables \
 //          -fno-builtin -fno-stack-protector -mno-mmx -mno-sse
@@ -19,15 +19,15 @@ char HELLO_MSG[] = " C in timer mode! ";
 short _scroll_pos_ = 0;
 
 FN_BIOS_CLEAR_SCREEN;
-FN_BIOS_SET_CURSOR_POS__ROW_COL;
+FN_BIOS_SET_CURSOR_POS_P_ROW_COL;
 FN_BIOS_PRINT_STRING__MSG_COLOR;
 //FN_BIOS_PRINT_ADDRESS_AS_HEX;
 
 void print_hi_msg_scroll() {
-    BIOS_PRINT_STRING__MSG(HELLO_MSG + _scroll_pos_);
+    BIOS_PRINT_STRING_P_MSG(HELLO_MSG + _scroll_pos_);
     _asm_char_2_ = HELLO_MSG[_scroll_pos_];
     HELLO_MSG[_scroll_pos_] = 0;
-    BIOS_PRINT_STRING__MSG(HELLO_MSG);
+    BIOS_PRINT_STRING_P_MSG(HELLO_MSG);
     HELLO_MSG[_scroll_pos_] = _asm_char_2_;
     if (++_scroll_pos_ >= sizeof(HELLO_MSG)) {
         _scroll_pos_ = 0;
@@ -39,8 +39,8 @@ BEGIN_TIMER_HANDLER;
 
     if (++delay > 183) {
         delay = 0;
-        BIOS_SET_CURSOR_POS__ROW_COL(8, 31);
-        BIOS_SET_PRINT_COLOR__COLOR(COLOR_WHITE);
+        BIOS_SET_CURSOR_POS_P_ROW_COL(8, 31);
+        BIOS_BIOS_SET_PRINT_COLOR_P_COLOR(COLOR_WHITE);
         print_hi_msg_scroll();
     }
 

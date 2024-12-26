@@ -1,7 +1,7 @@
 // It's EXTREMELY HARD to REALIABLE pass param to 16bit inline asm (GPT said and many AI struggled and failed)
 // So we choose using shared data to pass params. EVEN C code function param passing is not working!!!!!! So
 // we have to use macro
-// CC = i686-elf-gcc
+// EXE_C_COMPILER = i686-elf-gcc
 // CFLAGS = -m16 -ffreestanding -fno-pie \
 //          -nostdlib -nostdinc -fno-asynchronous-unwind-tables \
 //          -fno-builtin -fno-stack-protector -mno-mmx -mno-sse
@@ -10,7 +10,7 @@
 
 ASM_EPILOG;
 
-FN_BIOS_SET_CURSOR_POS__ROW_COL;
+FN_BIOS_SET_CURSOR_POS_P_ROW_COL;
 
 // Time get_rtc_time(void);
 // void print_time_at(Time time, char row, char col, char color);
@@ -53,10 +53,10 @@ FN_BIOS_PRINT_ADDRESS_AS_HEX;
 // }
 
 void print_hi_msg_scroll() {
-    BIOS_PRINT_STRING__MSG(HELLO_MSG + _scroll_pos_);
+    BIOS_PRINT_STRING_P_MSG(HELLO_MSG + _scroll_pos_);
     _asm_char_2_ = HELLO_MSG[_scroll_pos_];
     HELLO_MSG[_scroll_pos_] = 0;
-    BIOS_PRINT_STRING__MSG(HELLO_MSG);
+    BIOS_PRINT_STRING_P_MSG(HELLO_MSG);
     HELLO_MSG[_scroll_pos_] = _asm_char_2_;
     if (++_scroll_pos_ >= sizeof(HELLO_MSG)) {
         _scroll_pos_ = 0;
@@ -67,9 +67,9 @@ volatile int delay;
 
 void __attribute__((noreturn)) __attribute__((no_instrument_function)) bootsector_main(void) {
     BIOS_CLEAR_SCREEN();
-    BIOS_SET_CURSOR_POS__ROW_COL(12, 27);
-    BIOS_SET_PRINT_COLOR__COLOR(COLOR_GREEN);
-    BIOS_PRINT_STRING__MSG(ADV_MSG);
+    BIOS_SET_CURSOR_POS_P_ROW_COL(12, 27);
+    BIOS_BIOS_SET_PRINT_COLOR_P_COLOR(COLOR_GREEN);
+    BIOS_PRINT_STRING_P_MSG(ADV_MSG);
  
     while (1) {
         delay = 0;
@@ -77,8 +77,8 @@ void __attribute__((noreturn)) __attribute__((no_instrument_function)) bootsecto
             __asm__ volatile ("nop");
         }
 
-        BIOS_SET_CURSOR_POS__ROW_COL(9, 33); // 33 = 40 - sizeof(HI_MSG)/2
-        BIOS_SET_PRINT_COLOR__COLOR(COLOR_WHITE);
+        BIOS_SET_CURSOR_POS_P_ROW_COL(9, 33); // 33 = 40 - sizeof(HI_MSG)/2
+        BIOS_BIOS_SET_PRINT_COLOR_P_COLOR(COLOR_WHITE);
         print_hi_msg_scroll();
         //test_stack_var();
     }

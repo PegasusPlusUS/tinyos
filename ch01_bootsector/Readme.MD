@@ -15,7 +15,7 @@ V might be the 2nd high level language that can generate bootsector directly. Ho
 
 To go around this, we let V generate c code in default mode, which output over 500K c source. Then we use sed to filter out not used advanced functionalities, we got 654 bytes c code! (Though it will reuse a 6931 bytes header file shared by our c implementation of bootsector), i686-elf-gcc generates about 140 bytes executable, padding to 512 bytes! Will try adding simple dynamic display in V code.
 
-With the help of sed, generally a filter to remove no need code and add needed asm or C code shared by our nasm and C implementation for bootsector, usually if any high level programming language that can output C code or asm code, we will finally construct framework for routing bootsector work, and let the high level language do dynamic work.
+With the help of sed, generally a filter to remove no need code and add needed asm or C code shared by our nasm and C implementation for bootsector, usually if any high level programming language that can output C code or asm code, we will finally construct framework for routing bootsector work, and let the high level language do dynamic work. Now V,FreeBasic,Nim is OK.
 
 Will continue try this way to let Zig, Nim, Rust, FreePascal, TinyGo or Go, Moonbit, Ada, Fortran, Swift, Ocaml, Dart, Java?.
 

@@ -1,6 +1,6 @@
 .PONEY : build run clean
 
-CC = i686-elf-gcc
+EXE_C_COMPILER = i686-elf-gcc
 CFLAGS = -m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffreestanding -fno-pie \
          -nostdlib -nostdinc -fno-asynchronous-unwind-tables \
          -fno-builtin -fno-stack-protector -mno-mmx -mno-sse
@@ -10,8 +10,8 @@ ASMFLAGS = -m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffre
 		-fno-builtin -fno-stack-protector -mno-mmx -mno-sse -O0 -S 
          
 bootsector.o: bootsector.c bootsector.h ../../ch01_bootsector/c/bootsector.h Makefile
-	$(CC) $(CFLAGS) -c bootsector.c -o bootsector.o
-	$(CC) $(ASMFLAGS) -o bootsector.s bootsector.c
+	$(EXE_C_COMPILER) $(CFLAGS) -c bootsector.c -o bootsector.o
+	$(EXE_C_COMPILER) $(ASMFLAGS) -o bootsector.s bootsector.c
 
 bootsector.bin: bootsector.o
 	i686-elf-ld -T linker.ld --oformat binary -s -o bootsector.bin bootsector.o

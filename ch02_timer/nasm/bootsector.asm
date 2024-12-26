@@ -1,12 +1,11 @@
 [BITS 16]
 [ORG 0x7C00]
 
-%include "../../ch01_bootsector/nasm/common.asm"
-%include "common.asm"
+%include "common_timer_isr.asm"
 
 start:
     INIT_SEGMENTS
-    CLEAR_SCREEN
+    BIOS_CLEAR_SCREEN
 
     PRINT_STRING_COLOR [hello_msg_row], [hello_msg_col], [hello_msg_color], hello_msg
     PRINT_STRING_COLOR [turn_on_msg_row], [turn_on_msg_col], [turn_on_msg_color], turn_on_msg
@@ -48,7 +47,7 @@ BEGIN_ISR_TIMER _isr_timer
 
     ; Display time
     CALL_INC_MICRO_SEC_AND_TO_ASCII
-    CALL_QUERY_AND_PRINT_TIME
+    CALL_BIOS_QUERY_AND_PRINT_TIME
     ;CALL_PRINT_ADV_SCROLL
 
 .done:
@@ -57,10 +56,10 @@ END_ISR_TIMER
 
 
 FN_BCD_TO_ASCII
-FN_PRINT_STRING
+FN_BIOS_PRINT_STRING_P_MSG
 ;FN_PRINT_ADV_SCROLL
 FN_INC_MICRO_SEC_AND_TO_ASCII
-FN_QUERY_AND_PRINT_TIME
+FN_BIOS_QUERY_AND_PRINT_TIME
 
 ; Data
 

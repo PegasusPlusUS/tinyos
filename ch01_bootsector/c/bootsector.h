@@ -35,8 +35,24 @@ enum {
 //     COLOR_BLACK = 0x00,
 };
 
-#define FN_BIOS_SET_CURSOR_POS__ROW_COL \
-void asm_set_cursor_pos__row_col() {\
+void asm_bios_clear_screen();
+#define FN_BIOS_CLEAR_SCREEN \
+void asm_bios_clear_screen() {\
+    __asm__ volatile (\
+        "pushal\n\t"\
+        "mov $0x0003, %%ax\n\t"\
+        "int $0x10\n\t"\
+        "popal\n\t"\
+        :\
+        :\
+        :\
+    );\
+}
+#define BIOS_CLEAR_SCREEN(_) asm_bios_clear_screen()
+
+void asm_bios_set_cursor_pos_p_row_col();
+#define FN_BIOS_SET_CURSOR_POS_P_ROW_COL \
+void asm_bios_set_cursor_pos_p_row_col() {\
     __asm__ volatile (\
         "pushal\n\t"\
         "xor %%bh, %%bh\n\t"\
@@ -50,24 +66,15 @@ void asm_set_cursor_pos__row_col() {\
         : "memory"\
     );\
 }
+#define BIOS_SET_CURSOR_POS_P_ROW_COL(row, col) \
+    do {\
+        _asm_char_1_ = row;  _asm_char_2_ = col;\
+        asm_bios_set_cursor_pos_p_row_col();\
+    } while (0)
 
-#define FN_BIOS_CLEAR_SCREEN \
-void asm_clear_screen() {\
-    __asm__ volatile (\
-        "pushal\n\t"\
-        "mov $0x0003, %%ax\n\t"\
-        "int $0x10\n\t"\
-        "popal\n\t"\
-        :\
-        :\
-        :\
-    );\
-}
-
-#define BIOS_CLEAR_SCREEN(_) asm_clear_screen()
-
+void asm_bios_print_string_p_msg_color();
 #define FN_BIOS_PRINT_STRING__MSG_COLOR \
-void asm_print_string__msg_color() {\
+void asm_bios_print_string_p_msg_color() {\
     __asm__ volatile (\
         ".code16\n\t"\
         "pushal\n\t"\
@@ -145,7 +152,7 @@ void asm_print_address_as_hex() {\
         :\
         :\
     );\
-    BIOS_PRINT_STRING__MSG(_hex_buffer_);\
+    BIOS_PRINT_STRING_P_MSG(_hex_buffer_);\
 }
 
 #define BIOS_GET_ADDRESS_OF_STACK_VAR(stack_var) \
@@ -163,28 +170,22 @@ void asm_print_address_as_hex() {\
 #define BIOS_PRINT_ADDRESS_AS_HEX(_) \
     asm_print_address_as_hex()
 
-//void set_cursor_position(short row, short col) {
-#define BIOS_SET_CURSOR_POS__ROW_COL(row, col) \
-    do {\
-        _asm_char_1_ = row;  _asm_char_2_ = col;\
-        asm_set_cursor_pos__row_col();\
-    } while (0)
-
-#define BIOS_SET_PRINT_COLOR__COLOR(color) \
+void asm_bios_set_print_color_p_color(unsigned char color);
+#define BIOS_BIOS_SET_PRINT_COLOR_P_COLOR(color) \
     do {\
         _asm_char_1_ = color;\
     } while(0)
 
-#define BIOS_PRINT_STRING__MSG_COLOR(msg, color)\
+#define BIOS_PRINT_STRING_P_MSG_COLOR(msg, color)\
     do {\
         _asm_char_1_ = color;\
-        BIOS_PRINT_STRING__MSG(msg);\
+        BIOS_PRINT_STRING_P_MSG(msg);\
     } while(0)
 
-#define BIOS_PRINT_STRING__MSG(msg)\
+#define BIOS_PRINT_STRING_P_MSG(msg)\
     do {\
         _asm_msg_ = msg;\
-        asm_print_string__msg_color();\
+        asm_bios_print_string_p_msg_color();\
     } while(0)
 
 #define DATA_BIOS_PARAM \

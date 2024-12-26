@@ -1,3 +1,5 @@
+%include "common.asm"
+
 %macro PUSH_REGISTERS 0
     push ax
     push bx
