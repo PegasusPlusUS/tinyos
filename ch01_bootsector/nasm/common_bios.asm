@@ -1,4 +1,4 @@
-%macro CLEAR_SCREEN 0
+%macro BIOS_CLEAR_SCREEN 0
     mov ax, 0x0003      ; Text mode 80x25, 16 colors
     int 0x10            ; BIOS video interrupt
 %endmacro

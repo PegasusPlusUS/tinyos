@@ -1,31 +1,5 @@
-#Please help using awk to convert the 2 lines:
-#} TM__tLjJdorKZn78lBy9aS4V6Wg_4 = { 28 | NIM_STRLIT_FLAG, "Hi, bare-metal world by Nim!" };
-#static const NimStringV2 TM__tLjJdorKZn78lBy9aS4V6Wg_5 = {28, (NimStrPayload*)&TM__tLjJdorKZn78lBy9aS4V6Wg_4};
-#to one line:
-#string TM__tLjJdorKZn78lBy9aS4V6Wg_5 = "Hi, bare-metal world by Nim!";
+# Test on Nim 2.0.2
 #
-#static const struct {
-#  NI cap; NIM_CHAR data[1+1];
-#} TM__tLjJdorKZn78lBy9aS4V6Wg_2 = { 1 | NIM_STRLIT_FLAG, "!" };
-#static const NimStringV2 TM__tLjJdorKZn78lBy9aS4V6Wg_3 = {1, (NimStrPayload*)&TM__tLjJdorKZn78lBy9aS4V6Wg_2};
-#static const struct {
-#  NI cap; NIM_CHAR data[28+1];
-#} TM__tLjJdorKZn78lBy9aS4V6Wg_4 = { 28 | NIM_STRLIT_FLAG, "Hi, bare-metal world by Nim!" };
-#static const NimStringV2 TM__tLjJdorKZn78lBy9aS4V6Wg_5 = {28, (NimStrPayload*)&TM__tLjJdorKZn78lBy9aS4V6Wg_4};
-#
-#N_LIB_PRIVATE N_NIMCALL(void, start__bootsector_u7)(void) {
-#NIM_BOOL* nimErr_;
-#	nimfr_("start", "C:\\Export\\tinyos\\ch01_bootsector\\nim\\bootsector.nim");
-#{nimErr_ = nimErrorFlag();
-#	nimln_(4);	BIOS_CLEAR_SCREEN__bootsector_u3();
-#	if (NIM_UNLIKELY(*nimErr_)) goto BeforeRet_;
-#	nimln_(5);	BIOS_SET_CURSOR_POS_ROW_COL__bootsector_u4(((NU8)10), ((NU8)30));
-#	if (NIM_UNLIKELY(*nimErr_)) goto BeforeRet_;
-#	nimln_(6);	BIOS_PRINT_STRING_MSG__bootsector_u1(TM__tLjJdorKZn78lBy9aS4V6Wg_5);
-#	if (NIM_UNLIKELY(*nimErr_)) goto BeforeRet_;
-#	}BeforeRet_: ;
-#	popFrame();
-#}
 
 BEGIN {
     LANG_SURFIX = ".nim"

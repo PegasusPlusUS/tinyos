@@ -1,4 +1,4 @@
-;%include "common_bios.asm"
+%include "common_bios.asm"
 
 %macro INIT_SEGMENTS 0
     xor ax, ax          ; Clear AX
@@ -6,6 +6,7 @@
     mov es, ax          ; Set ES=0
     mov ss, ax          ; Set SS=0
     mov sp, 0x7C00      ; Set stack pointer just below where we're loaded
+    mov esp, 0x00007C00 ; Set 32bit stack pointer to the same address, how about segment selector?
 %endmacro
 
 %macro FN_BCD_TO_ASCII 0

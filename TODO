@@ -1,0 +1,4 @@
+☐ 1. ia16-elf-gcc or i686-elf-gcc but setup esp at startup to see if param is ok
+☐ 2. nasm make reuse common.mk
+☐ 3. ch02_timer nasm/c reuse common.mk at ch01 
+☐ 4. ch02_timer let V work
