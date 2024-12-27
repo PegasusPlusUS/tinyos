@@ -1,4 +1,11 @@
 ☐ 1. ia16-elf-gcc or i686-elf-gcc but setup esp at startup to see if param is ok
-☐ 2. nasm make reuse common.mk
-☐ 3. ch02_timer nasm/c reuse common.mk at ch01 
+✔ 2. nasm Makefile reuse common.mk @done(24-12-25 23:12)
+✔ 3. ch02_timer nasm/c reuse common.mk at ch01 @done(24-12-26 16:46)
 ☐ 4. ch02_timer let V work
+☐ 5. ch03 bootloader with Rust
+☐ 6. ch01 bootsector with Swift
+☐ 7. ch03 32-bit protected mode with Rust
+☐ 8. ch04 64-bit long mode with Rust
+☐ 9. ch05 interrupt with Rust
+☐ 10. ch06 memory management with Rust, for zero copy between kernel and user space and kernel apps
+
