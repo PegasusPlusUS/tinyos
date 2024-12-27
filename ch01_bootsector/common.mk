@@ -16,11 +16,12 @@
 # 2. EXE_LANG_COMPILER: the executable name of the compiler, e.g., nim, v, fbc, fpc, go, zig, swift, gfortran
 # 3. FLAGS_LANG_TO_C: the flags to pass to the compiler, e.g., -r, -freestanding, -c --genScript --cc:gcc --compileOnly --out:
 # 4. Optional: FILES_SOURCE_SET: the source files set representation, e.g., . for V
-# 4. Optional: FILES_SOURCE_ADDITIONAL_DEPENDENCIES: the additional dependencies for the source file, e.g., main.v
-# 5. Optional: SCRIPT_LANG_TO_C_POST_PROCESSING: the post processing command to run after the source file is compiled to C,
+# 5. Optional: FILES_SOURCE_DEPENDENCIES: the dependencies for the source file, e.g., common.$(LANG_SUFFIX), common_bios.$(LANG_SUFFIX)
+# 6. Optional: FILES_SOURCE_ADDITIONAL_DEPENDENCIES: the additional dependencies for the source file, e.g., main.v
+# 7. Optional: SCRIPT_LANG_TO_C_POST_PROCESSING: the post processing command to run after the source file is compiled to C,
 #   e.g., cp ~/nimcache/$(BOOTSECTOR)_d/@m$(FILE_LANG_TO_C_INITIAL_RESULT) $(FILE_LANG_TO_C_INITIAL_RESULT) 
-# 6. Optional: C_DEPENDENCIES: the dependencies for the C code, e.g., ../c/common_prefix.h ../c/bootsector.h ../c/common_suffix.h
-# 7. Optional: C_LANG_DEPENDENCIES: the dependencies for the C code of LANG, e.g., common_prefix.$(LANG_SUFFIX).h common_suffix.$(LANG_SUFFIX).h $(C_DEPENDENCIES)
+# 8. Optional: C_DEPENDENCIES: the dependencies for the C code, e.g., ../c/common_prefix.h ../c/bootsector.h ../c/common_suffix.h
+# 9. Optional: C_LANG_DEPENDENCIES: the dependencies for the C code of LANG, e.g., common_prefix.$(LANG_SUFFIX).h common_suffix.$(LANG_SUFFIX).h $(C_DEPENDENCIES)
 #
 # common.mk assumes:
 # 1. There is a filter_$(LANG_SUFFIX)_to_c_result.awk file to filter initial C code to final C code.
@@ -57,14 +58,17 @@ endif
 SHELL?=/usr/bin/bash
 
 BOOTSECTOR=bootsector
-FILES_BUILD_RULES?=Makefile ../common.mk
+BASE_DIR?=../ch01_bootsector/
+FILES_BUILD_RULES?=Makefile ../$(BASE_DIR)common.mk
 
 
 ifdef LANG_SUFFIX
 PIPE_LINE_SKIP_TO_C=false
 ifeq ($(LANG_SUFFIX), asm)
 EXE_LANG_COMPILER=nasm
-FLAGS_COMPILER2TARGET=-o 
+FLAGS_COMPILER2TARGET?=-o 
+FILES_SOURCE_DEPENDENCIES?=common.$(LANG_SUFFIX) common_bios.$(LANG_SUFFIX)
+else
 PIPE_LINE_SKIP_TO_C=true
 endif
 endif
@@ -82,7 +86,7 @@ FLAGS_CC=-m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffrees
 FLAGS_C_TO_O=$(FLAGS_CC) -o 
 FLAGS_C_TO_ASM=$(FLAGS_CC) -O0 -S -o 
 EXE_LINK=i686-elf-ld
-FLAGS_LINK=-T ../c/linker.ld --oformat binary -s
+FLAGS_LINK=-T ../$(BASE_DIR)c/linker.ld --oformat binary -s
 
 # CI_PIPE_LINE_START
 FILE_SOURCE?=$(BOOTSECTOR).$(LANG_SUFFIX)
@@ -152,8 +156,8 @@ $(FILE_TARGET): $(FILE_SOURCE) $(FILES_SOURCE_DEPENDENCIES) $(FILES_SOURCE_ADDIT
 endif
 
 # Verify and test scripts
-SCRIPT_VERIFY?=../verify_boot.sh
-SCRIPT_TEST?=../test.qemu.sh
+SCRIPT_VERIFY?=../$(BASE_DIR)verify_boot.sh
+SCRIPT_TEST?=../$(BASE_DIR)test.qemu.sh
 
 # Build and run targets
 build: $(FILE_TARGET) $(FILES_BUILD_RULES)

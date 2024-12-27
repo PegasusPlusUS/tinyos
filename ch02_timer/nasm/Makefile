@@ -1,12 +1,5 @@
-bootsector.bin : bootsector.asm common.asm ../../ch01_bootsector/nasm/common.asm
-	nasm -I ../../ch01_bootsector/nasm -o bootsector.bin bootsector.asm
+LANG_SUFFIX=asm
+FLAGS_COMPILER2TARGET=-I ../../ch01_bootsector/nasm -o
+FILES_SOURCE_DEPENDENCIES=common_timer_isr.asm ../../ch01_bootsector/nasm/common.asm ../../ch01_bootsector/nasm/common_bios.asm
 
-build : bootsector.bin
-	echo "run nasm to build bootsector.bin"
-
-run : bootsector.bin
-	echo "run QEMU to load bootsector.bin as disk image for boot device"
-	qemu-system-x86_64 -m 1m -drive file=bootsector.bin,format=raw
-
-clean :
-	rm -f bootsector.bin
+include ../../ch01_bootsector/common.mk
