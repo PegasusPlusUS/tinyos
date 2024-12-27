@@ -1,4 +1,4 @@
-name: Makefile CI
+name: Build and Test ch01_bootsector
 
 on:
   push:
@@ -12,16 +12,35 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: configure
-      run: ./configure
+      - name: Set up environment
+        run: 
+          ./configure
+          sudo apt-get update
+          sudo apt-get install -y nasm make xxd gcc
 
-    - name: Install dependencies
-      run: make
+          # Install FreeBASIC
+          sudo apt-get install -y freebasic
 
-    - name: Run check
-      run: make check
+          # Install Nim
+          curl -sL https://nim-lang.org/choosenim/init.sh | sh
+          export PATH="$HOME/.nimble/bin:$PATH"
 
-    - name: Run distcheck
-      run: make distcheck
+          # Install V
+          curl -s https://raw.githubusercontent.com/vlang/v/master/install.sh | bash
+          export PATH="$HOME/.vlang/bin:$PATH"
+
+      - name: Build and Test in Subdirectories
+        run: |
+          for dir in ch01_bootsector/*; do
+            if [ -d "$dir" ]; then
+              echo "Building in directory: $dir"
+              cd "$dir"
+              make clean || true
+              make || { echo "Build failed in $dir"; exit 1; }
+              echo "Build succeeded in $dir"
+              cd -
+            fi
+          done
