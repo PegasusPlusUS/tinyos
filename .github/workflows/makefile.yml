@@ -16,7 +16,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Set up environment
-        run: 
+        run: |
           ./configure
           sudo apt-get update
           sudo apt-get install -y nasm make xxd gcc
@@ -31,6 +31,8 @@ jobs:
           # Install V
           curl -s https://raw.githubusercontent.com/vlang/v/master/install.sh | bash
           export PATH="$HOME/.vlang/bin:$PATH"
+
+          echo "Environment setup completed."
 
       - name: Build and Test in Subdirectories
         run: |
