@@ -51,11 +51,7 @@ TITLE?=bootsector
 
 all: run
 
-ifneq ($(LANG_SUFFIX), asm)
-.PHONY : run build neat clean run_under_av check_asm
-else
 .PHONY : run build neat clean run_under_av
-endif
 
 SHELL?=/usr/bin/bash
 
@@ -84,8 +80,10 @@ EXE_C_COMPILER=i686-elf-gcc
 FLAGS_CC=-m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffreestanding -fno-pie \
         -nostdlib -nostdinc -fno-asynchronous-unwind-tables \
         -fno-builtin -fno-stack-protector -mno-mmx -mno-sse
-FLAGS_C_TO_O=$(FLAGS_CC) -o 
-FLAGS_C_TO_ASM=$(FLAGS_CC) -O0 -S -o 
+FLAGS_C_TO_ASM=-S -m16 -o
+EXE_FILTER=awk
+EXE_ASM_COMPILER=as
+FLAGS_ASM_TO_O= --32 -o 
 EXE_LINK=i686-elf-ld
 FLAGS_LINK=-T $(BASE_DIR)c/linker.ld --oformat binary -s
 
@@ -108,18 +106,18 @@ $(FILE_LANG_TO_C_INITIAL_RESULT): $(FILE_SOURCE) $(FILES_SOURCE_DEPENDENCIES) $(
 	@$(SCRIPT_LANG_TO_C_POST_PROCESSING)
 
 # 2. Filter C initial to final
-FILTER=awk
 SCRIPT_FILTER_LANG_TO_C=$(FILES_SOURCE_COMMOM_PREFIX)filter_$(LANG_SUFFIX)_to_c_result.awk
 $(FILE_LANG_TO_C_FINAL_RESULT): $(FILE_LANG_TO_C_INITIAL_RESULT) $(SCRIPT_FILTER_LANG_TO_C) $(FILES_BUILD_RULES)
-	@echo "# Filter out unneeded code and add necessary reused functions and $(BOOTSECTOR) signature from ../c/$(BOOTSECTOR).h by $(FILTER)."
-	@$(FILTER) -f $(SCRIPT_FILTER_LANG_TO_C) $(FILE_LANG_TO_C_INITIAL_RESULT) > $(FILE_LANG_TO_C_FINAL_RESULT)
-else
+	@echo "# Filter out unneeded code and add necessary reused functions and $(BOOTSECTOR) signature from ../c/$(BOOTSECTOR).h by $(EXE_FILTER)."
+	@$(EXE_FILTER) -f $(SCRIPT_FILTER_LANG_TO_C) $(FILE_LANG_TO_C_INITIAL_RESULT) > $(FILE_LANG_TO_C_FINAL_RESULT)
 endif
 
 ifneq ($(LANG_SUFFIX), asm)
-# 3.0 final C to O
+# 3.0 final C to asm
 FILE_OBJ_RESULT=$(BOOTSECTOR).o
-FILE_C_TO_ASM_RESULT=$(BOOTSECTOR).s
+FILE_C_TO_ASM_INITIAL_RESULT=$(BOOTSECTOR).s
+FILE_C_TO_ASM_FINAL_RESULT=$(BOOTSECTOR).asm
+SCRIPT_LANG_TO_ASM_POST_PROCESSING=../filter_32bit_to_16bit_asm.awk
 C_DEPENDENCIES?=$(BASE_DIR)c/common_prefix.h $(BASE_DIR)c/bootsector.h $(BASE_DIR)c/common_suffix.h
 ifndef C_LANG_DEPENDENCIES
 C_LANG_DEPENDENCIES=$(C_DEPENDENCIES)
@@ -128,19 +126,18 @@ C_LANG_DEPENDENCIES=$(C_DEPENDENCIES) $(FILES_SOURCE_COMMOM_PREFIX)common_prefix
 endif
 endif
 
-$(FILE_OBJ_RESULT): $(FILE_LANG_TO_C_FINAL_RESULT) $(C_LANG_DEPENDENCIES) $(FILES_BUILD_RULES)
-ifneq ($(LANG_SUFFIX), c)
-	@echo "# Compile processed C code $(FILE_LANG_TO_C_FINAL_RESULT) to object by $(EXE_C_COMPILER)."
-else
-	@echo "# Compile C code to object by $(EXE_C_COMPILER)."
-endif
-	@$(EXE_C_COMPILER) $(FLAGS_C_TO_O)$(FILE_OBJ_RESULT) -c $(FILE_LANG_TO_C_FINAL_RESULT)
+$(FILE_C_TO_ASM_INITIAL_RESULT): $(FILE_LANG_TO_C_FINAL_RESULT) $(C_LANG_DEPENDENCIES) $(FILES_BUILD_RULES)
+	@echo "# Generate asm code by $(EXE_C_COMPILER)."
+	@$(EXE_C_COMPILER) $(FLAGS_C_TO_ASM)$(FILE_C_TO_ASM_INITIAL_RESULT) $(FILE_LANG_TO_C_FINAL_RESULT)
 
-# 3.1 optional final C to ASM
-$(FILE_C_TO_ASM_RESULT): $(FILE_LANG_TO_C_FINAL_RESULT) $(C_LANG_DEPENDENCIES) $(FILES_BUILD_RULES)
-	@echo "# Generate asm code for checking by $(EXE_C_COMPILER)."
-	@$(EXE_C_COMPILER) $(FLAGS_C_TO_ASM)$(FILE_C_TO_ASM_RESULT) $(FILE_LANG_TO_C_FINAL_RESULT)
-endif
+$(FILE_C_TO_ASM_FINAL_RESULT): $(FILE_C_TO_ASM_INITIAL_RESULT) $(C_LANG_DEPENDENCIES) $(SCRIPT_LANG_TO_ASM_POST_PROCESSING) $(FILES_BUILD_RULES)
+	@echo "# Filter asm code to convert 32bit to 16bit by $(SCRIPT_LANG_TO_ASM_POST_PROCESSING)."
+	echo $(EXE_FILTER) 
+	@$(EXE_FILTER) -f $(SCRIPT_LANG_TO_ASM_POST_PROCESSING) < $(FILE_C_TO_ASM_INITIAL_RESULT) > $(FILE_C_TO_ASM_FINAL_RESULT)
+
+$(FILE_OBJ_RESULT): $(FILE_C_TO_ASM_FINAL_RESULT) $(C_LANG_DEPENDENCIES) $(FILES_BUILD_RULES)
+	@echo "# Compile ASM code to object by $(EXE_ASM_COMPILER)."
+	@$(EXE_ASM_COMPILER) $(FLAGS_ASM_TO_O)$(FILE_OBJ_RESULT) -c $(FILE_C_TO_ASM_FINAL_RESULT)
 
 # 4. Link object to target
 # Link object to binary
@@ -149,8 +146,9 @@ ifneq ($(LANG_SUFFIX), asm)
 $(FILE_TARGET): $(FILE_OBJ_RESULT) $(FILES_BUILD_RULES)
 	@echo "# Link object to binary by $(EXE_LINK)."
 	@$(EXE_LINK) $(FLAGS_LINK) -o $(FILE_TARGET) $(FILE_OBJ_RESULT)
+endif
+# 1. ASM to target
 else
-# 1. ASM to binary
 $(FILE_TARGET): $(FILE_SOURCE) $(FILES_SOURCE_DEPENDENCIES) $(FILES_SOURCE_ADDITIONAL_DEPENDENCIES) $(FILES_BUILD_RULES)
 	@echo "# Compile $(FILE_SOURCE) to $(FILE_TARGET) by $(EXE_LANG_COMPILER)."
 	@$(EXE_LANG_COMPILER) $(FLAGS_COMPILER2TARGET) $(FILE_TARGET) $(FILE_SOURCE)
@@ -171,8 +169,11 @@ check_asm: $(FILE_C_TO_ASM_RESULT) $(FILES_BUILD_RULES)
 
 neat:
 	rm -f *.o *.s *.pz
-ifneq (.$(LANG_SUFFIX), .c)
+ifneq ($(LANG_SUFFIX), c)
 	rm -f *.c
+endif
+ifneq ($(LANG_SUFFIX), asm)
+	rm -f *.asm
 endif
 
 clean: neat
