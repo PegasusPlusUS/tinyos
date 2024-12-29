@@ -58,8 +58,8 @@ endif
 SHELL?=/usr/bin/bash
 
 BOOTSECTOR=bootsector
-BASE_DIR?=../ch01_bootsector/
-FILES_BUILD_RULES?=Makefile ../$(BASE_DIR)common.mk
+BASE_DIR?=../../ch01_bootsector/
+FILES_BUILD_RULES?=Makefile $(BASE_DIR)common.mk
 
 
 ifdef LANG_SUFFIX
@@ -67,7 +67,6 @@ PIPE_LINE_SKIP_TO_C=false
 ifeq ($(LANG_SUFFIX), asm)
 EXE_LANG_COMPILER=nasm
 FLAGS_COMPILER2TARGET?=-o 
-FILES_SOURCE_DEPENDENCIES?=common.$(LANG_SUFFIX) common_bios.$(LANG_SUFFIX)
 else
 PIPE_LINE_SKIP_TO_C=true
 endif
@@ -78,6 +77,9 @@ LANG_SUFFIX=c
 PIPE_LINE_SKIP_TO_C=true
 endif
 
+FILES_SOURCE_COMMOM_PREFIX?=$(BASE_DIR)$(LANG_SUFFIX)/
+FILES_SOURCE_DEPENDENCIES?=$(FILES_SOURCE_COMMOM_PREFIX)common.$(LANG_SUFFIX) $(FILES_SOURCE_COMMOM_PREFIX)common_bios.$(LANG_SUFFIX)
+
 # Common rules and variables
 EXE_C_COMPILER=i686-elf-gcc
 FLAGS_CC=-m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffreestanding -fno-pie \
@@ -86,7 +88,7 @@ FLAGS_CC=-m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffrees
 FLAGS_C_TO_O=$(FLAGS_CC) -o 
 FLAGS_C_TO_ASM=$(FLAGS_CC) -O0 -S -o 
 EXE_LINK=i686-elf-ld
-FLAGS_LINK=-T ../$(BASE_DIR)c/linker.ld --oformat binary -s
+FLAGS_LINK=-T $(BASE_DIR)c/linker.ld --oformat binary -s
 
 # CI_PIPE_LINE_START
 FILE_SOURCE?=$(BOOTSECTOR).$(LANG_SUFFIX)
@@ -156,8 +158,8 @@ $(FILE_TARGET): $(FILE_SOURCE) $(FILES_SOURCE_DEPENDENCIES) $(FILES_SOURCE_ADDIT
 endif
 
 # Verify and test scripts
-SCRIPT_VERIFY?=../$(BASE_DIR)verify_boot.sh
-SCRIPT_TEST?=../$(BASE_DIR)test.qemu.sh
+SCRIPT_VERIFY?=$(BASE_DIR)verify_boot.sh
+SCRIPT_TEST?=/$(BASE_DIR)test.qemu.sh
 
 # Build and run targets
 build: $(FILE_TARGET) $(FILES_BUILD_RULES)
