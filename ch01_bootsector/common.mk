@@ -121,7 +121,7 @@ ifneq ($(LANG_SUFFIX), asm)
 # 3.0 final C to O
 FILE_OBJ_RESULT=$(BOOTSECTOR).o
 FILE_C_TO_ASM_RESULT=$(BOOTSECTOR).s
-C_DEPENDENCIES?=../c/common_prefix.h ../c/bootsector.h ../c/common_suffix.h
+C_DEPENDENCIES?=$(BASE_DIR)c/common_prefix.h $(BASE_DIR)c/bootsector.h $(BASE_DIR)c/common_suffix.h
 ifndef C_LANG_DEPENDENCIES
 C_LANG_DEPENDENCIES=$(C_DEPENDENCIES)
 ifneq ($(LANG_SUFFIX), c)
@@ -159,7 +159,7 @@ endif
 
 # Verify and test scripts
 SCRIPT_VERIFY?=$(BASE_DIR)verify_boot.sh
-SCRIPT_TEST?=/$(BASE_DIR)test.qemu.sh
+SCRIPT_TEST?=$(BASE_DIR)test.qemu.sh
 
 # Build and run targets
 build: $(FILE_TARGET) $(FILES_BUILD_RULES)

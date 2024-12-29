@@ -1,18 +1,39 @@
-nasm/bootsector.bin : nasm/bootsector.asm
-	cd nasm && make
+# TODO enumrate each language, compile target, or select one language to compile target and run
+.PHONY=clean neat neat-subdirs check
 
-.pipe/pb_holder/target/release/pb_holder : .pipe/pb_holder/Cargo.toml
-	cd .pipe/pb_holder && cargo build --release
+SUBDIRS = asm c v bas nim
 
-build : nasm/bootsector.bin
-	echo "run test.qemu.sh to test tinyOS from VM"
+# Define the target for each bootsector.bin in the subdirectories
+BOOTSECTORS = $(patsubst %, dir/%/bootsector.bin, $(SUBDIRS))
 
-run : build
-	bash -c "./test.qemu.sh &"
+all: $(BOOTSECTORS)
 
-run_with_defender : run .pipe/pb_holder/target/release/pb_holder
-	echo "Using pb_holder to brige compiler and VM, avoiding saving bootsetor file"
+# Rule to build each bootsector.bin directly from each subdirectory
+dir/%/bootsector.bin:
+	@$(MAKE) -C $* bootsector.bin
 
-clean :
-	rm -f nasm/bootsector.bin
-	rm -rf .pipe/pb_holder/target/
+# New target to perform neat operations in the main directory
+neat:
+	@echo "Running neat operations in the main directory..."
+	# Example: Remove temporary files (customize as needed)
+	@rm -f *.o *.tmp
+	@echo "Neat operations completed."
+
+# New target to run 'make neat' in each subdirectory
+neat-subdirs:
+	@for dir in $(SUBDIRS); do \
+		$(MAKE) -C $$dir neat; \
+	done
+
+# New target to check for the existence of dir/bootsector.bin
+check:
+	@if [ -f dir/bootsector.bin ]; then \
+		echo "dir/bootsector.bin exists."; \
+	else \
+		echo "dir/bootsector.bin does not exist."; \
+	fi
+
+clean:
+	@for dir in $(SUBDIRS); do \
+		$(MAKE) -C $$dir clean; \
+	done
