@@ -109,7 +109,7 @@ $(FILE_LANG_TO_C_INITIAL_RESULT): $(FILE_SOURCE) $(FILES_SOURCE_DEPENDENCIES) $(
 
 # 2. Filter C initial to final
 FILTER=awk
-SCRIPT_FILTER_LANG_TO_C=filter_$(LANG_SUFFIX)_to_c_result.awk
+SCRIPT_FILTER_LANG_TO_C=$(FILES_SOURCE_COMMOM_PREFIX)filter_$(LANG_SUFFIX)_to_c_result.awk
 $(FILE_LANG_TO_C_FINAL_RESULT): $(FILE_LANG_TO_C_INITIAL_RESULT) $(SCRIPT_FILTER_LANG_TO_C) $(FILES_BUILD_RULES)
 	@echo "# Filter out unneeded code and add necessary reused functions and $(BOOTSECTOR) signature from ../c/$(BOOTSECTOR).h by $(FILTER)."
 	@$(FILTER) -f $(SCRIPT_FILTER_LANG_TO_C) $(FILE_LANG_TO_C_INITIAL_RESULT) > $(FILE_LANG_TO_C_FINAL_RESULT)
@@ -124,13 +124,13 @@ C_DEPENDENCIES?=$(BASE_DIR)c/common_prefix.h $(BASE_DIR)c/bootsector.h $(BASE_DI
 ifndef C_LANG_DEPENDENCIES
 C_LANG_DEPENDENCIES=$(C_DEPENDENCIES)
 ifneq ($(LANG_SUFFIX), c)
-C_LANG_DEPENDENCIES=$(C_DEPENDENCIES) common_prefix.$(LANG_SUFFIX).h common_suffix.$(LANG_SUFFIX).h
+C_LANG_DEPENDENCIES=$(C_DEPENDENCIES) $(FILES_SOURCE_COMMOM_PREFIX)common_prefix.$(LANG_SUFFIX).h $(FILES_SOURCE_COMMOM_PREFIX)common_suffix.$(LANG_SUFFIX).h
 endif
 endif
 
 $(FILE_OBJ_RESULT): $(FILE_LANG_TO_C_FINAL_RESULT) $(C_LANG_DEPENDENCIES) $(FILES_BUILD_RULES)
 ifneq ($(LANG_SUFFIX), c)
-	@echo "# Compile processed C code to object by $(EXE_C_COMPILER)."
+	@echo "# Compile processed C code $(FILE_LANG_TO_C_FINAL_RESULT) to object by $(EXE_C_COMPILER)."
 else
 	@echo "# Compile C code to object by $(EXE_C_COMPILER)."
 endif

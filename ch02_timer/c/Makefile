@@ -1,1 +1,1 @@
-include ../../ch01_bootsector/common.mk
+include ../common.mk
