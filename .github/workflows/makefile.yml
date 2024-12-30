@@ -1,0 +1,48 @@
+name: Build and Test ch01_bootsector
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up environment
+        run: |
+          ./configure
+          sudo apt-get update
+          sudo apt-get install -y nasm make xxd gcc
+
+          # Install FreeBASIC
+          sudo apt-get install -y freebasic
+
+          # Install Nim
+          curl -sL https://nim-lang.org/choosenim/init.sh | sh
+          export PATH="$HOME/.nimble/bin:$PATH"
+
+          # Install V
+          curl -s https://raw.githubusercontent.com/vlang/v/master/install.sh | bash
+          export PATH="$HOME/.vlang/bin:$PATH"
+
+          echo "Environment setup completed."
+
+      - name: Build and Test in Subdirectories
+        run: |
+          for dir in ch01_bootsector/*; do
+            if [ -d "$dir" ]; then
+              echo "Building in directory: $dir"
+              cd "$dir"
+              make clean || true
+              make || { echo "Build failed in $dir"; exit 1; }
+              echo "Build succeeded in $dir"
+              cd -
+            fi
+          done
