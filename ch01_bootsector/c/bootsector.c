@@ -11,8 +11,6 @@
 
 BEGIN_ASM_BOOTSECTOR;
 
-
-DATA_BIOS_PARAM;
 DATA_ADV_MSG;
 
 
@@ -151,7 +149,7 @@ short _scroll_pos_ = 0;
 void print_hi_msg_scroll() {
     asm_bios_print_char('H');
     //asm_bios_print_string(HELLO_MSG + _scroll_pos_, COLOR_GREEN);
-    _asm_char_2_ = HELLO_MSG[_scroll_pos_];
+    unsigned char _asm_char_2_ = HELLO_MSG[_scroll_pos_];
     HELLO_MSG[_scroll_pos_] = 0;
     asm_bios_print_char('i');
     //asm_bios_print_string(HELLO_MSG, COLOR_LIGHT_BLUE);
@@ -165,7 +163,8 @@ volatile int delay;
 
 void __attribute__((noreturn)) __attribute__((no_instrument_function)) bootsector_main(void) {
     asm_bios_clear_screen();
-    asm_bios_set_cursor_pos(0, 0);
+    asm_bios_set_cursor_pos(12, 0);
+    asm_bios_set_cursor_pos(12, 5);
     asm_bios_set_print_color(COLOR_WHITE);
     asm_bios_print_char('C');
     //asm_bios_print_string(ADV_MSG, COLOR_GREEN);

@@ -1,0 +1,133 @@
+
+bootsector.o:     file format elf32-i386
+
+
+Disassembly of section .text:
+
+00000000 <_start>:
+   0:	31 c0                	xor    %eax,%eax
+   2:	8e d8                	mov    %eax,%ds
+   4:	8e c0                	mov    %eax,%es
+   6:	8e c8                	mov    %eax,%cs
+   8:	8e d0                	mov    %eax,%ss
+   a:	bc ff 7b 31 c0       	mov    $0xc0317bff,%esp
+   f:	89 e0                	mov    %esp,%eax
+  11:	89 c4                	mov    %eax,%esp
+  13:	ea 00 00 00 00 60 89 	ljmp   $0x8960,$0x0
+
+00000018 <asm_bios_set_cursor_pos>:
+  18:	60                   	pusha  
+  19:	89 e5                	mov    %esp,%ebp
+  1b:	b4 02                	mov    $0x2,%ah
+  1d:	8a 76 08             	mov    0x8(%esi),%dh
+  20:	8a 56 0c             	mov    0xc(%esi),%dl
+  23:	b7 00                	mov    $0x0,%bh
+  25:	cd 10                	int    $0x10
+  27:	61                   	popa   
+  28:	90                   	nop
+  29:	c3                   	ret    
+
+0000002a <asm_bios_clear_screen>:
+  2a:	89 e5                	mov    %esp,%ebp
+  2c:	60                   	pusha  
+  2d:	b4 00                	mov    $0x0,%ah
+  2f:	b0 03                	mov    $0x3,%al
+  31:	cd 10                	int    $0x10
+  33:	61                   	popa   
+  34:	90                   	nop
+  35:	c3                   	ret    
+
+00000036 <asm_bios_set_print_color>:
+  36:	60                   	pusha  
+  37:	89 e5                	mov    %esp,%ebp
+  39:	83 ec 04             	sub    $0x4,%esp
+  3c:	8b 46 08             	mov    0x8(%esi),%eax
+  3f:	88 46 fc             	mov    %al,-0x4(%esi)
+  42:	0f b6 46 fc          	movzbl -0x4(%esi),%eax
+  46:	b7 00                	mov    $0x0,%bh
+  48:	88 c3                	mov    %al,%bl
+  4a:	b4 00                	mov    $0x0,%ah
+  4c:	cd 10                	int    $0x10
+  4e:	61                   	popa   
+  4f:	90                   	nop
+  50:	c9                   	leave  
+  51:	c3                   	ret    
+
+00000052 <asm_bios_print_char>:
+  52:	60                   	pusha  
+  53:	89 e5                	mov    %esp,%ebp
+  55:	83 ec 04             	sub    $0x4,%esp
+  58:	8b 46 08             	mov    0x8(%esi),%eax
+  5b:	88 46 fc             	mov    %al,-0x4(%esi)
+  5e:	0f b6 46 fc          	movzbl -0x4(%esi),%eax
+  62:	88 c0                	mov    %al,%al
+  64:	b4 09                	mov    $0x9,%ah
+  66:	b9 01 00 cd 10       	mov    $0x10cd0001,%ecx
+  6b:	61                   	popa   
+  6c:	90                   	nop
+  6d:	c3                   	ret    
+
+0000006e <print_hi_msg_scroll>:
+  6e:	55                   	push   %ebp
+  6f:	89 e5                	mov    %esp,%ebp
+  71:	83 ec 10             	sub    $0x10,%esp
+  74:	6a 48                	push   $0x48
+  76:	e8 fe ff 83 c4       	call   c4840079 <bootsector_main+0xc483ffb0>
+  7b:	04 0f                	add    $0xf,%al
+  7d:	b6 06                	mov    $0x6,%dh
+  7f:	00 00                	add    %al,(%eax)
+  81:	98                   	cwtl   
+  82:	0f b6 06             	movzbl (%esi),%eax
+  85:	00 00                	add    %al,(%eax)
+  87:	88 46 ff             	mov    %al,-0x1(%esi)
+  8a:	0f b6 06             	movzbl (%esi),%eax
+  8d:	00 00                	add    %al,(%eax)
+  8f:	98                   	cwtl   
+  90:	c6 06 00             	movb   $0x0,(%esi)
+  93:	00 00                	add    %al,(%eax)
+  95:	6a 69                	push   $0x69
+  97:	e8 fe ff 83 c4       	call   c484009a <bootsector_main+0xc483ffd1>
+  9c:	04 0f                	add    $0xf,%al
+  9e:	b6 06                	mov    $0x6,%dh
+  a0:	00 00                	add    %al,(%eax)
+  a2:	98                   	cwtl   
+  a3:	0f b6 56 ff          	movzbl -0x1(%esi),%edx
+  a7:	88 16                	mov    %dl,(%esi)
+  a9:	00 00                	add    %al,(%eax)
+  ab:	0f b6 06             	movzbl (%esi),%eax
+  ae:	00 00                	add    %al,(%eax)
+  b0:	83 c0 01             	add    $0x1,%eax
+  b3:	a3 00 00 0f b6       	mov    %eax,0xb60f0000
+  b8:	06                   	push   %es
+  b9:	00 00                	add    %al,(%eax)
+  bb:	83 f8 0a             	cmp    $0xa,%eax
+  be:	76 06                	jbe    c6 <print_hi_msg_scroll+0x58>
+  c0:	c7 06 00 00 00 00    	movl   $0x0,(%esi)
+  c6:	90                   	nop
+  c7:	c9                   	leave  
+  c8:	c3                   	ret    
+
+000000c9 <bootsector_main>:
+  c9:	89 e5                	mov    %esp,%ebp
+  cb:	e8 fe ff 6a 00       	call   6b00ce <bootsector_main+0x6b0005>
+  d0:	6a 0c                	push   $0xc
+  d2:	e8 fe ff 83 c4       	call   c48400d5 <bootsector_main+0xc484000c>
+  d7:	08 6a 05             	or     %ch,0x5(%edx)
+  da:	6a 0c                	push   $0xc
+  dc:	e8 fe ff 83 c4       	call   c48400df <bootsector_main+0xc4840016>
+  e1:	08 6a 0f             	or     %ch,0xf(%edx)
+  e4:	e8 fe ff 83 c4       	call   c48400e7 <bootsector_main+0xc484001e>
+  e9:	04 6a                	add    $0x6a,%al
+  eb:	43                   	inc    %ebx
+  ec:	e8 fe ff 83 c4       	call   c48400ef <bootsector_main+0xc4840026>
+  f1:	04 c7                	add    $0xc7,%al
+  f3:	06                   	push   %es
+  f4:	00 00                	add    %al,(%eax)
+  f6:	00 00                	add    %al,(%eax)
+  f8:	eb 01                	jmp    fb <bootsector_main+0x32>
+  fa:	90                   	nop
+  fb:	a1 00 00 83 c0       	mov    0xc0830000,%eax
+ 100:	01 a3 00 00 3d ff    	add    %esp,-0xc30000(%ebx)
+ 106:	7c 7e                	jl     186 <bootsector_main+0xbd>
+ 108:	f1                   	icebp  
+ 109:	eb e7                	jmp    f2 <bootsector_main+0x29>

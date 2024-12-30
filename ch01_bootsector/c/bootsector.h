@@ -126,12 +126,6 @@ void asm_print_address_as_hex() {\
 #define BIOS_PRINT_ADDRESS_AS_HEX(_) \
     asm_print_address_as_hex()
 
-
-#define DATA_BIOS_PARAM \
-volatile unsigned char _asm_char_1_;\
-volatile unsigned char _asm_char_2_;\
-volatile const char* _asm_msg_
-
 #define DATA_ADV_MSG \
 const char ADV_MSG[] = "GitHub:PegasusPlus/tinyos"
 
