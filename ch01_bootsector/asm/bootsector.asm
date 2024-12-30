@@ -1,7 +1,7 @@
 [org 0x7c00]            ; Tell NASM where this code will be loaded
 [bits 16]               ; We're working in 16-bit real mode
 
-%include "common.asm"
+%include "common_bootsector.asm"
 
 start:
     INIT_SEGMENTS

@@ -16,12 +16,12 @@ func printStringWithColor(msg string, color byte) {
 	defer C.free(unsafe.Pointer(cMsg)) // Free the C string after use
 
 	// Call the C function
-	C.asm_bios_print_string_p_msg_color(cMsg, C.uchar(color))
+	C.asm_bios_print_string(cMsg, C.uchar(color))
 }
 
 //export start
 func start() {
 	C.asm_bios_clear_screen()
-	C.asm_bios_set_cursor_pos_p_row_col(10, 25)
+	C.asm_bios_set_cursor_pos(10, 25)
 	printStringWithColor("Hello, bare-metal world by Go!", C.COLOR_GREEN)
 }

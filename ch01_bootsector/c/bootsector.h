@@ -1,7 +1,7 @@
 #ifndef _BOOT_SECTOR_H_
 #define _BOOT_SECTOR_H_
 
-#define ASM_EPILOG \
+#define BEGIN_ASM_BOOTSECTOR \
 __asm__(    \
     ".code16\n\t"           \
     ".global _start\n\t"    \
@@ -12,6 +12,9 @@ __asm__(    \
     "mov %ax, %cs\n\t"      \
     "mov %ax, %ss\n\t"      \
     "mov $0x7BFF, %sp\n\t"  \
+    "xor %eax, %eax\n\t"      \
+    "mov %sp, %ax\n\t"     \
+    "mov %eax, %esp\n\t"      \
     "jmp $0x0000, $bootsector_main\n\t" \
 )
 
@@ -31,78 +34,31 @@ enum {
 //     COLOR_DARK_GREY = 0x04,
 //     COLOR_GREY_BLUE = 0x03,
 //     COLOR_LIGHT_GREEN = 0x02,
-//     COLOR_LIGHT_BLUE = 0x01,
+     COLOR_LIGHT_BLUE = 0x01,
 //     COLOR_BLACK = 0x00,
 };
 
+#ifdef USE_ASM_BIOS_CLEAR_SCREEN
 void asm_bios_clear_screen();
-#define FN_BIOS_CLEAR_SCREEN \
-void asm_bios_clear_screen() {\
-    __asm__ volatile (\
-        "pushal\n\t"\
-        "mov $0x0003, %%ax\n\t"\
-        "int $0x10\n\t"\
-        "popal\n\t"\
-        :\
-        :\
-        :\
-    );\
-}
-#define BIOS_CLEAR_SCREEN(_) asm_bios_clear_screen()
+#endif
 
-void asm_bios_set_cursor_pos_p_row_col();
-#define FN_BIOS_SET_CURSOR_POS_P_ROW_COL \
-void asm_bios_set_cursor_pos_p_row_col() {\
-    __asm__ volatile (\
-        "pushal\n\t"\
-        "xor %%bh, %%bh\n\t"\
-        "movb _asm_char_1_, %%dh\n\t"\
-        "movb _asm_char_2_, %%dl\n\t"\
-        "movb $0x02, %%ah\n\t"\
-        "int $0x10\n\t"\
-        "popal\n\t"\
-        :\
-        :\
-        : "memory"\
-    );\
-}
-#define BIOS_SET_CURSOR_POS_P_ROW_COL(row, col) \
-    do {\
-        _asm_char_1_ = row;  _asm_char_2_ = col;\
-        asm_bios_set_cursor_pos_p_row_col();\
-    } while (0)
+#ifdef USE_ASM_BIOS_SET_CURSOR_POS
+void asm_bios_set_cursor_pos(unsigned char row, unsigned char col);
+void asm_bios_set_cursor_pos_12_0();
+void asm_bios_set_cursor_pos_12_11();
+#endif
 
-void asm_bios_print_string_p_msg_color();
-#define FN_BIOS_PRINT_STRING__MSG_COLOR \
-void asm_bios_print_string_p_msg_color() {\
-    __asm__ volatile (\
-        ".code16\n\t"\
-        "pushal\n\t"\
-        "mov _asm_msg_, %%si\n\t"\
-    ".loop:\n\t"\
-        "lodsb\n\t"              /* Load next byte from [SI] into AL (address of str pointed by ESI) */\
-        "test %%al, %%al\n\t"    /* Test AL (check for null terminator) */\
-        "jz .done\n\t"           /* Jump to done if AL is 0 (null terminator) */\
-        "movb $0x09, %%ah\n\t"   /* BIOS teletype (character + attribute) */\
-        "movw $1, %%cx\n\t"      /* Print 1 character */\
-        "movb _asm_char_1_, %%bl\n\t"\
-        "xor %%bh, %%bh\n\t"      /* Page number 0 */\
-        "int $0x10\n\t"\
-        /* Move cursor forward */\
-        "movb $0x03, %%ah\n\t"   /* BIOS get cursor position, result col in %dl */\
-        "xor %%bh, %%bh\n\t"      /* Page number 0 */\
-        "int $0x10\n\t"\
-        "inc %%dl\n\t"           /* Increment column (move cursor forward) */\
-        "movb $0x02, %%ah\n\t"   /* BIOS set cursor position */\
-        "int $0x10\n\t"\
-        "jmp .loop\n\t"          /* Repeat loop to print next char */\
-    ".done:\n\t"\
-        "popal\n\t"\
-        :\
-        :\
-        : "memory" /* Clobbered registers */\
-    );\
-}
+#ifdef USE_ASM_BIOS_SET_PRINT_COLOR
+void asm_bios_set_print_color(unsigned char colour);
+#endif
+
+#ifdef USE_ASM_BIOS_PRINT_CHAR
+void asm_bios_print_char(unsigned char c);
+#endif
+
+#ifdef USE_ASM_BIOS_PRINT_STRING
+void asm_bios_print_string(const char msg[], unsigned char colour);
+#endif
 
 #define FN_BIOS_PRINT_ADDRESS_AS_HEX \
 /* // Define a buffer to hold the hexadecimal string */\
@@ -150,9 +106,9 @@ void asm_print_address_as_hex() {\
         "popal\n\t"\
         :\
         :\
-        :\
+        : "memory"\
     );\
-    BIOS_PRINT_STRING_P_MSG(_hex_buffer_);\
+    asm_bios_print_string(_hex_buffer_, COLOR_LIGHT_BLUE);\
 }
 
 #define BIOS_GET_ADDRESS_OF_STACK_VAR(stack_var) \
@@ -169,29 +125,6 @@ void asm_print_address_as_hex() {\
 
 #define BIOS_PRINT_ADDRESS_AS_HEX(_) \
     asm_print_address_as_hex()
-
-void asm_bios_set_print_color_p_color(unsigned char color);
-#define BIOS_BIOS_SET_PRINT_COLOR_P_COLOR(color) \
-    do {\
-        _asm_char_1_ = color;\
-    } while(0)
-
-#define BIOS_PRINT_STRING_P_MSG_COLOR(msg, color)\
-    do {\
-        _asm_char_1_ = color;\
-        BIOS_PRINT_STRING_P_MSG(msg);\
-    } while(0)
-
-#define BIOS_PRINT_STRING_P_MSG(msg)\
-    do {\
-        _asm_msg_ = msg;\
-        asm_bios_print_string_p_msg_color();\
-    } while(0)
-
-#define DATA_BIOS_PARAM \
-volatile char _asm_char_1_;\
-volatile char _asm_char_2_;\
-volatile const char* _asm_msg_
 
 #define DATA_ADV_MSG \
 const char ADV_MSG[] = "GitHub:PegasusPlus/tinyos"

@@ -1,11 +1,3 @@
-// It's EXTREMELY HARD to REALIABLE pass param to 16bit inline asm (GPT said and many AI struggled and failed)
-// So we choose using shared data to pass params. EVEN C code function param passing is not working!!!!!! So
-// we have to use macro
-// EXE_C_COMPILER = i686-elf-gcc
-// CFLAGS = -m16 -ffreestanding -fno-pie \
-//          -nostdlib -nostdinc -fno-asynchronous-unwind-tables \
-//          -fno-builtin -fno-stack-protector -mno-mmx -mno-sse
-////#pragma GCC optimize("O0")
 #include "bootsector.h"
 
 ASM_EPILOG_TIMER_INTERUPT;

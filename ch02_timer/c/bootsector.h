@@ -14,14 +14,6 @@ __asm__(\
     "movw %ax, %ss\n\t"\
     "movw $0x7C00, %sp\n\t"\
 \
-    "call asm_bios_clear_screen\n\t"\
-    "movb $12, _asm_char_1_\n\t"\
-    "movb $27, _asm_char_2_\n\t"\
-    "call asm_bios_set_cursor_pos_p_row_col\n\t"\
-    "movb $10, _asm_char_1_\n\t"\
-    "movw $ADV_MSG, _asm_msg_\n\t"\
-    "call asm_bios_print_string_p_msg_color\n\t"\
-\
     "cli\n\t"\
 \
         /* ; Remap PIC */\
@@ -52,10 +44,10 @@ __asm__(\
         "movb $0xFE, %al\n\t"        /* // Enable IRQ0 only */\
         "outb %al, $0x21\n\t"        /* // Send command to PIC */\
 \
-    "sti\n\t"\
+        "sti\n\t"\
 ".halt:\n\t"\
-    "hlt\n\t"\
-    "jmp .halt\n\t"\
+        "hlt\n\t"\
+        "jmp .halt\n\t"\
 \
 ".inline_isr_:\n\t"\
         "pushal\n\t"            /* //PUSH_REGISTERS */\
@@ -69,7 +61,7 @@ __asm__(\
         "outb %al, $0x20\n\t"\
 \
         "popal\n\t"     /* //POP_REGISTERS */\
-"iret\n\t"\
+        "iret\n\t"\
 )
 
 #define BEGIN_TIMER_HANDLER \

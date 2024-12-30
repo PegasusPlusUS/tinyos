@@ -1,0 +1,31 @@
+
+asm_bios_set_cursor_pos:
+    push    %bp
+    movw    %sp, %bp
+    pushal
+    movb    $0x02, %ah     # Set cursor position
+    movb    8(%bp), %dh    # Row from stack
+    movb    12(%bp), %dl   # Column from stack
+    movb    $0x00, %bh     # Page number (usually 0)
+    int     $0x10
+    popal
+    leave
+    ret
+
+asm_bios_clear_screen:
+    push    %bp
+    movw    %sp, %bp
+/APP
+/  38 "../../ch01_bootsector/c/bootsector.c" 1
+    pushal
+    movb    $0x00, %ah     # Set video mode
+    movb    $0x03, %al     # Mode 3: 80x25 color text
+    int     $0x10
+    popal
+	
+/  0 "" 2
+/NO_APP
+	nop
+	pop	%bp
+    leave
+    ret
