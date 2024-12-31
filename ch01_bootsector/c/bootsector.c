@@ -1,10 +1,10 @@
 // i686-elf-gcc can't generate 16bit stack operation so that param to 16bit inline asm (GPT said and many AI struggled and failed)
 // So we choose using shared data to pass params. EVEN C code function param passing is not working!!!!!! So
 // we have to use macro
-#define USE_ASM_BIOS_CLEAR_SCREEN
+//#define USE_ASM_BIOS_CLEAR_SCREEN
 #define USE_ASM_BIOS_SET_CURSOR_POS
-#define USE_ASM_BIOS_PRINT_CHAR
-#define USE_ASM_BIOS_SET_PRINT_COLOR
+//#define USE_ASM_BIOS_PRINT_CHAR
+//#define USE_ASM_BIOS_SET_PRINT_COLOR
 //#define USE_ASM_BIOS_PRINT_STRING
 
 #include "bootsector.h"
@@ -102,7 +102,7 @@ void asm_bios_print_string(const char msg[]) {
 }
 #endif
 
-char HELLO_MSG[] = " Hi, gcc! ";
+//char HELLO_MSG[] = " Hi, gcc! ";
 
 //FN_BIOS_PRINT_ADDRESS_AS_HEX;
 
@@ -145,15 +145,15 @@ char HELLO_MSG[] = " Hi, gcc! ";
 //    }
 //}
 
-volatile int delay;
 
 void __attribute__((noreturn)) __attribute__((no_instrument_function)) bootsector_main(void) {
-    asm_bios_clear_screen();
+    //asm_bios_clear_screen();
     asm_bios_set_cursor_pos(12, 5);
-    asm_bios_set_print_color(COLOR_WHITE);
-    asm_bios_print_char('C');
+    //asm_bios_set_print_color(COLOR_WHITE);
+    //asm_bios_print_char('C');
     //asm_bios_print_string(ADV_MSG, COLOR_GREEN);
  
+    volatile int delay;
     while (1) {
         delay = 0;
         while (++delay < 32000) {

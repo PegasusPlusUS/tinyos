@@ -62,7 +62,9 @@ FILE_TARGET=$(BOOTSECTOR).bin
 
 # Common rules and variables
 EXE_C_COMPILER?=/home/ping/study/gcc-ia16/host-x86_64-pc-linux-gnu/gcc/xgcc
-FLAGS_CC?=-fcall-used-ax -fcall-used-dx -ffreestanding -fno-pie \
+FLAGS_CC?=-Os -mshort-jumps -finline-limit=0 -fno-inline -falign-functions=1 \
+	-falign-jumps=1 -falign-loops=1 -march=i8086 \
+	-fcall-used-ax -fcall-used-dx -ffreestanding -fno-pie \
         -nostdlib -nostdinc -fno-asynchronous-unwind-tables \
         -fno-builtin -fno-stack-protector
 FLAGS_C_TO_O?=$(FLAGS_CC) -c -o 
