@@ -17,7 +17,6 @@ jobs:
 
       - name: Set up environment
         run: |
-          ./configure
           sudo apt-get update
           sudo apt-get install -y nasm make xxd gcc
 
