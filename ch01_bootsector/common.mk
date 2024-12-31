@@ -65,8 +65,8 @@ EXE_C_COMPILER?=/home/ping/study/gcc-ia16/host-x86_64-pc-linux-gnu/gcc/xgcc
 FLAGS_CC?=-fcall-used-ax -fcall-used-dx -ffreestanding -fno-pie \
         -nostdlib -nostdinc -fno-asynchronous-unwind-tables \
         -fno-builtin -fno-stack-protector
-FLAGS_C_TO_O?=$(FLAGS_CC) -o
-FLAGS_C_TO_ASM?=$(FLAGS_CC) -S -o
+FLAGS_C_TO_O?=$(FLAGS_CC) -c -o 
+FLAGS_C_TO_ASM?=$(FLAGS_CC) -S -o 
 EXE_FILTER?=awk
 EXE_LINK=ld
 FLAGS_LINK=-T $(BASE_DIR)c/linker.ld --oformat binary -s
@@ -145,15 +145,20 @@ endif
 SCRIPT_VERIFY?=$(BASE_DIR)verify_boot.sh
 SCRIPT_TEST?=$(BASE_DIR)test.qemu.sh
 
-# Build and run targets
-build: $(FILE_TARGET) $(FILES_BUILD_RULES)
+# Build target
+build: $(FILE_TARGET)
 	@echo "# Verify $(FILE_TARGET) is valid $(BOOTSECTOR)."
 	@$(SHELL) $(SCRIPT_VERIFY)
 
 ifneq ($(LANG_SUFFIX), asm)
-check_asm: $(FILE_C_TO_ASM_RESULT) $(FILES_BUILD_RULES)
+FILE_C_TO_ASM_RESULT?=$(FILE_SOURCE).asm
+check_asm: $(FILE_C_TO_ASM_RESULT)
 	@echo "# Check $(FILE_C_TO_ASM_RESULT) for debugging."
 	@code $(FILE_C_TO_ASM_RESULT)
+
+$(FILE_C_TO_ASM_RESULT): $(FILE_LANG_TO_C_FINAL_RESULT) $(FILES_BUILD_RULES)
+	@echo "# Compile C code to ASM code by $(EXE_C_COMPILER)."
+	@$(EXE_C_COMPILER) $(FLAGS_C_TO_ASM) $(FILE_C_TO_ASM_RESULT) $(FILE_LANG_TO_C_FINAL_RESULT)
 endif
 
 neat:
@@ -168,6 +173,7 @@ endif
 clean: neat
 	rm -f $(FILE_TARGET)
 
+# Using VM to boot from target
 run: build
 	@echo "# Run QEMU VM with 1M memory to load $(FILE_TARGET) as disk image for boot device"
 	$(SHELL) $(SCRIPT_TEST)

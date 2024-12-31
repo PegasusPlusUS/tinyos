@@ -9,12 +9,8 @@ __asm__(    \
     "xor %ax, %ax\n\t"      \
     "mov %ax, %ds\n\t"      \
     "mov %ax, %es\n\t"      \
-    "mov %ax, %cs\n\t"      \
     "mov %ax, %ss\n\t"      \
     "mov $0x7BFF, %sp\n\t"  \
-    "xor %eax, %eax\n\t"      \
-    "mov %sp, %ax\n\t"     \
-    "mov %eax, %esp\n\t"      \
     "jmp $0x0000, $bootsector_main\n\t" \
 )
 
@@ -44,8 +40,6 @@ void asm_bios_clear_screen();
 
 #ifdef USE_ASM_BIOS_SET_CURSOR_POS
 void asm_bios_set_cursor_pos(unsigned char row, unsigned char col);
-void asm_bios_set_cursor_pos_12_0();
-void asm_bios_set_cursor_pos_12_11();
 #endif
 
 #ifdef USE_ASM_BIOS_SET_PRINT_COLOR
@@ -127,7 +121,7 @@ void asm_print_address_as_hex() {\
     asm_print_address_as_hex()
 
 #define DATA_ADV_MSG \
-const char ADV_MSG[] = "GitHub:PegasusPlus/tinyos"
+const char ADV_MSG[] = "GH:PegasusPlus/tinyos"
 
 #define END_BOOTSECTOR \
 __asm__(".section .boot_signature\n"\

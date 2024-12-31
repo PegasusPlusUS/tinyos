@@ -11,38 +11,33 @@
 
 BEGIN_ASM_BOOTSECTOR;
 
-DATA_ADV_MSG;
+//DATA_ADV_MSG;
 
 
 #ifdef USE_ASM_BIOS_SET_CURSOR_POS
 void asm_bios_set_cursor_pos(unsigned char row, unsigned char col) {
     __asm__ volatile (
-        "pushal\n\t"
+        ".code16\n\t"
         "movb %0, %%dh\n\t"
         "movb %1, %%dl\n\t"
         "movb $0x02, %%ah\n\t"
         "int $0x10\n\t"
-        "popal\n\t"
         :
         : "r"(row), "r"(col)
-        :
+        : "ah", "dx"
     );
 }
 #endif
 
-// Time get_rtc_time(void);
-// void print_time_at(Time time, char row, char col, char color);
-
 #ifdef USE_ASM_BIOS_CLEAR_SCREEN
 void asm_bios_clear_screen() {
     __asm__ volatile (
-        "pushal\n\t"
+        ".code16\n\t"
         "movw $0x0003, %%ax\n\t"
         "int $0x10\n\t"
-        "popal\n\t"
         :
         :
-        :
+        : "ax"
     );
 }
 #endif
@@ -50,15 +45,14 @@ void asm_bios_clear_screen() {
 #ifdef USE_ASM_BIOS_SET_PRINT_COLOR
 void asm_bios_set_print_color(unsigned char c) {
     __asm__ volatile (
-        "pushal\n\t"
+        ".code16\n\t"
         "movb $0x0, %%bh\n\t"
         "movb %0, %%bl\n\t"
         "movb $0x0, %%ah\n\t"
         "int $0x10\n\t"
-        "popal\n\t"
         :
         : "r"(c)
-        : "memory"
+        : "bx", "ah"
     );
 }
 #endif
@@ -66,57 +60,49 @@ void asm_bios_set_print_color(unsigned char c) {
 #ifdef USE_ASM_BIOS_PRINT_CHAR
 void asm_bios_print_char(unsigned char c) {
     __asm__ volatile (
-        "pushal\n\t"
+        ".code16\n\t"
         "movb %0, %%al\n\t"
         "movb $0x09, %%ah\n\t"
         "movw $0x01, %%cx\n\t"
         "int $0x10\n\t"
-        "popal\n\t"
         :
         : "r"(c)
-        : "memory"
+        : "ax", "cx" 
     );
 }
 #endif
 
 #ifdef USE_ASM_BIOS_PRINT_STRING
-void asm_bios_print_string(const char msg[], unsigned char colour) {
-    _asm_msg_ = "msg"; 
-    _asm_char_1_ = colour;
-
+void asm_bios_print_string(const char msg[]) {
     __asm__ volatile (
         ".code16\n\t"
-        "pushal\n\t"                  // Save all general-purpose registers
+        "push %%ax\n\t"                  // Save all general-purpose registers
         "mov _asm_msg_, %%si\n\t"     // Load the address of the string into SI
     ".loop:\n\t"
         "lodsb\n\t"                    // Load the next byte from [SI] into AL
         "test %%al, %%al\n\t"          // Test AL (check for null terminator)
         "jz .done\n\t"                 // Jump to done if AL is 0 (null terminator)
-        "movb 'H', %%al\n\t"            // Load character into AL
         "movb $0x09, %%ah\n\t"         // BIOS teletype (character + attribute)
         "movw $1, %%cx\n\t"            // Print 1 character
-        "movb _asm_char_1_, %%bl\n\t"  // Load color attribute into BL
         "xor %%bh, %%bh\n\t"           // Page number 0
         "int $0x10\n\t"                // Call BIOS interrupt to print character
         /* Move cursor forward */
         "movb $0x03, %%ah\n\t"         // BIOS get cursor position, result col in %dl
-        "xor %%bh, %%bh\n\t"           // Page number 0
         "int $0x10\n\t"                // Call BIOS interrupt to get cursor position
         "inc %%dl\n\t"                 // Increment column (move cursor forward)
         "movb $0x02, %%ah\n\t"         // BIOS set cursor position
         "int $0x10\n\t"                // Call BIOS interrupt to set cursor position
         "jmp .loop\n\t"                // Repeat loop to print next char
     ".done:\n\t"
-        "popal\n\t"                    // Restore all general-purpose registers
+        "pop %%ax\n\t"                    // Restore all general-purpose registers
         :
-        :
+        : "r"(msg)
         : "memory"                     // Clobbered registers
     );
 }
 #endif
 
 char HELLO_MSG[] = " Hi, gcc! ";
-short _scroll_pos_ = 0;
 
 //FN_BIOS_PRINT_ADDRESS_AS_HEX;
 
@@ -146,24 +132,23 @@ short _scroll_pos_ = 0;
 //     // print_address_as_hex();
 // }
 
-void print_hi_msg_scroll() {
-    asm_bios_print_char('H');
-    //asm_bios_print_string(HELLO_MSG + _scroll_pos_, COLOR_GREEN);
-    unsigned char _asm_char_2_ = HELLO_MSG[_scroll_pos_];
-    HELLO_MSG[_scroll_pos_] = 0;
-    asm_bios_print_char('i');
-    //asm_bios_print_string(HELLO_MSG, COLOR_LIGHT_BLUE);
-    HELLO_MSG[_scroll_pos_] = _asm_char_2_;
-    if (++_scroll_pos_ >= sizeof(HELLO_MSG)) {
-        _scroll_pos_ = 0;
-    }
-}
+//void print_hi_msg_scroll() {
+//    asm_bios_print_char('H');
+//    //asm_bios_print_string(HELLO_MSG + _scroll_pos_, COLOR_GREEN);
+//    unsigned char _asm_char_2_ = HELLO_MSG[_scroll_pos_];
+//    HELLO_MSG[_scroll_pos_] = 0;
+//    asm_bios_print_char('i');
+//    //asm_bios_print_string(HELLO_MSG, COLOR_LIGHT_BLUE);
+//    HELLO_MSG[_scroll_pos_] = _asm_char_2_;
+//    if (++_scroll_pos_ >= sizeof(HELLO_MSG)) {
+//        _scroll_pos_ = 0;
+//    }
+//}
 
 volatile int delay;
 
 void __attribute__((noreturn)) __attribute__((no_instrument_function)) bootsector_main(void) {
     asm_bios_clear_screen();
-    asm_bios_set_cursor_pos(12, 0);
     asm_bios_set_cursor_pos(12, 5);
     asm_bios_set_print_color(COLOR_WHITE);
     asm_bios_print_char('C');
