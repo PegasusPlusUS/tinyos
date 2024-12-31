@@ -51,22 +51,34 @@ TITLE?=bootsector
 
 all: run
 
-.PHONY : run build neat clean run_under_av
+.PHONY : run build check_asm neat clean run_under_av
 
 SHELL?=/usr/bin/bash
 
 BOOTSECTOR=bootsector
 BASE_DIR?=../../ch01_bootsector/
 FILES_BUILD_RULES?=Makefile $(BASE_DIR)common.mk
+FILE_TARGET=$(BOOTSECTOR).bin
 
+# Common rules and variables
+EXE_C_COMPILER?=/home/ping/study/gcc-ia16/host-x86_64-pc-linux-gnu/gcc/xgcc
+FLAGS_CC?=-mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffreestanding -fno-pie \
+        -nostdlib -nostdinc -fno-asynchronous-unwind-tables \
+        -fno-builtin -fno-stack-protector -mno-mmx -mno-sse
+FLAGS_C_TO_ASM?=$(FLAGS_CC) -S -o
+EXE_FILTER?=awk
+EXE_ASM_COMPILER?=as
+FLAGS_ASM_TO_O?=-o 
+EXE_LINK=ld
+FLAGS_LINK=-T $(BASE_DIR)c/linker.ld --oformat binary -s
 
 ifdef LANG_SUFFIX
-PIPE_LINE_SKIP_TO_C=false
 ifeq ($(LANG_SUFFIX), asm)
 EXE_LANG_COMPILER?=nasm
 FLAGS_COMPILER2TARGET?=-o 
 PIPE_LINE_SKIP_TO_C=true
 else
+PIPE_LINE_SKIP_TO_C=false
 endif
 endif
 
@@ -75,22 +87,11 @@ LANG_SUFFIX=c
 PIPE_LINE_SKIP_TO_C=true
 endif
 
-# Common rules and variables
-EXE_C_COMPILER=i686-elf-gcc
-FLAGS_CC=-m16 -mregparm=3 -mno-push-args -fcall-used-eax -fcall-used-edx -ffreestanding -fno-pie \
-        -nostdlib -nostdinc -fno-asynchronous-unwind-tables \
-        -fno-builtin -fno-stack-protector -mno-mmx -mno-sse
-FLAGS_C_TO_ASM=-S -m16 -o
-EXE_FILTER=awk
-EXE_ASM_COMPILER=as
-FLAGS_ASM_TO_O= --32 -o 
-EXE_LINK=i686-elf-ld
-FLAGS_LINK=-T $(BASE_DIR)c/linker.ld --oformat binary -s
 
 # CI_PIPE_LINE_START
 FILES_SOURCE_COMMOM_PREFIX?=$(BASE_DIR)$(LANG_SUFFIX)/
 FILES_SOURCE_DEPENDENCIES?=$(FILES_SOURCE_COMMOM_PREFIX)common_$(TITLE).$(LANG_SUFFIX) $(FILES_SOURCE_COMMOM_PREFIX)common_bios.$(LANG_SUFFIX)
-FILE_SOURCE?=$(FILES_SOURCE_COMMOM_PREFIX)$(BOOTSECTOR).$(LANG_SUFFIX)
+FILE_SOURCE?=$(BOOTSECTOR).$(LANG_SUFFIX)
 
 FILE_LANG_TO_C_FINAL_RESULT=$(FILES_SOURCE_COMMOM_PREFIX)$(BOOTSECTOR).c
 ifneq ($(PIPE_LINE_SKIP_TO_C), true)
@@ -141,10 +142,9 @@ $(FILE_OBJ_RESULT): $(FILE_C_TO_ASM_FINAL_RESULT) $(C_LANG_DEPENDENCIES) $(FILES
 
 # 4. Link object to target
 # Link object to binary
-FILE_TARGET=$(BOOTSECTOR).bin
 ifneq ($(LANG_SUFFIX), asm)
 $(FILE_TARGET): $(FILE_OBJ_RESULT) $(FILES_BUILD_RULES)
-	@echo "# Link object to binary by $(EXE_LINK)."
+	@echo "# Link obj $(FILE_OBJ_RESULT) to $(FILE_TARGET) by $(EXE_LINK)."
 	@$(EXE_LINK) $(FLAGS_LINK) -o $(FILE_TARGET) $(FILE_OBJ_RESULT)
 endif
 # 1. ASM to target
@@ -163,9 +163,11 @@ build: $(FILE_TARGET) $(FILES_BUILD_RULES)
 	@echo "# Verify $(FILE_TARGET) is valid $(BOOTSECTOR)."
 	@$(SHELL) $(SCRIPT_VERIFY)
 
+ifneq ($(LANG_SUFFIX), asm)
 check_asm: $(FILE_C_TO_ASM_RESULT) $(FILES_BUILD_RULES)
 	@echo "# Check $(FILE_C_TO_ASM_RESULT) for debugging."
 	@code $(FILE_C_TO_ASM_RESULT)
+endif
 
 neat:
 	rm -f *.o *.s *.pz
