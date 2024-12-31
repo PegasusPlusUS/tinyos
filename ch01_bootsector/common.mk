@@ -70,7 +70,7 @@ FLAGS_CC?=-Os -mshort-jumps -finline-limit=0 -fno-inline -falign-functions=1 \
 FLAGS_C_TO_O?=$(FLAGS_CC) -c -o 
 FLAGS_C_TO_ASM?=$(FLAGS_CC) -S -o 
 EXE_FILTER?=awk
-EXE_LINK=ld
+EXE_LINK=i686-elf-ld
 FLAGS_LINK=-T $(BASE_DIR)c/linker.ld --oformat binary -s
 
 ifdef LANG_SUFFIX
@@ -132,7 +132,7 @@ $(FILE_OBJ_RESULT): $(FILE_LANG_TO_C_FINAL_RESULT) $(C_LANG_DEPENDENCIES) $(FILE
 # 4. Link object to target
 # Link object to binary
 ifneq ($(LANG_SUFFIX), asm)
-$(FILE_TARGET): $(FILE_OBJ_RESULT) $(FILES_BUILD_RULES)
+$(FILE_TARGET): $(FILE_OBJ_RESULT)
 	@echo "# Link obj $(FILE_OBJ_RESULT) to $(FILE_TARGET) by $(EXE_LINK)."
 	@$(EXE_LINK) $(FLAGS_LINK) -o $(FILE_TARGET) $(FILE_OBJ_RESULT)
 endif
