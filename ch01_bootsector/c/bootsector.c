@@ -9,9 +9,9 @@
 
 BEGIN_ASM_BOOTSECTOR;
 
-//DATA_ADV_MSG;
+DATA_ADV_MSG;
 
-//char HELLO_MSG[] = " Hi, gcc! ";
+char HELLO_MSG[] = " Hi, gcc! ";
 // void test_stack_var() {
 //     char stack_var;
 //     //Will hang if assign to stack_var or even access address of stack_var
@@ -51,13 +51,17 @@ BEGIN_ASM_BOOTSECTOR;
 //    }
 //}
 
+void print_string(const char *str) {
+    while (*str) {
+        asm_bios_print_char(*str++);
+    }
+}
 
 void __attribute__((noreturn)) __attribute__((no_instrument_function)) bootsector_main(void) {
-    //asm_bios_clear_screen();
+    asm_bios_clear_screen();
     asm_bios_set_cursor_pos(12, 5);
-    //asm_bios_set_print_color(COLOR_WHITE);
-    //asm_bios_print_char('C');
-    //asm_bios_print_string(ADV_MSG, COLOR_GREEN);
+    asm_bios_set_print_color(COLOR_GREEN);
+    print_string(ADV_MSG);
  
     volatile int delay;
     while (1) {
