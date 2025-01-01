@@ -127,7 +127,7 @@ C_LANG_DEPENDENCIES=$(C_DEPENDENCIES) $(FILES_SOURCE_COMMOM_PREFIX)common_prefix
 endif
 
 $(FILE_ASM_RESULT): $(FILE_LANG_TO_C_FINAL_RESULT) $(C_LANG_DEPENDENCIES) $(FILES_BUILD_RULES)
-	@echo "# Compile C code to ASM by $(notdir $(EXE_C_COMPILER))."
+	@echo "# Compile $(FILE_LANG_TO_C_FINAL_RESULT) to $(FILE_ASM_RESULT) by $(notdir $(EXE_C_COMPILER))."
 	@$(EXE_C_COMPILER) $(FLAGS_C_TO_ASM)$(FILE_ASM_RESULT) $(FILE_LANG_TO_C_FINAL_RESULT)
 
 # 4. ASM to Obj
@@ -139,14 +139,14 @@ C_LANG_DEPENDENCIES=$(C_DEPENDENCIES) $(FILES_SOURCE_COMMOM_PREFIX)common_prefix
 endif
 
 $(FILE_OBJ_RESULT): $(FILE_ASM_RESULT) $(FILES_BUILD_RULES)
-	@echo "# Compile ASM code to OBJ by $(notdir $(EXE_ASM_COMPILER))."
+	@echo "# Compile $(FILE_ASM_RESULT) to $(FILE_OBJ_RESULT) by $(notdir $(EXE_ASM_COMPILER))."
 	@$(EXE_ASM_COMPILER) $(FLAGS_ASM_TO_O)$(FILE_OBJ_RESULT) $(FILE_ASM_RESULT)
 
 # 5. Link object to target
 # Link object to binary
 ifneq ($(LANG_SUFFIX), asm)
 $(FILE_TARGET): $(FILE_OBJ_RESULT)
-	@echo "# Link obj $(FILE_OBJ_RESULT) to $(FILE_TARGET) by $(EXE_LINK)."
+	@echo "# Link $(FILE_OBJ_RESULT) to $(FILE_TARGET) by $(EXE_LINK)."
 	@$(EXE_LINK) $(FLAGS_LINK) -o $(FILE_TARGET) $(FILE_OBJ_RESULT)
 endif
 else
