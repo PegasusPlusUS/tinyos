@@ -63,12 +63,24 @@ FILE_TARGET=$(BOOTSECTOR).bin
 
 # Common rules and variables
 # Path to ia-16 gcc: /home/ping/study/gcc-ia16/host-x86_64-pc-linux-gnu/gcc/xgcc, cc1
+
+OS := $(shell uname)
+
+ifeq ($(OS), Linux)
 EXE_C_COMPILER?=xgcc
 FLAGS_CC?=-Os -mshort-jumps -finline-limit=0 -fno-inline -falign-functions=1 \
 	-falign-jumps=1 -falign-loops=1 -march=i8086 \
 	-fcall-used-ax -fcall-used-dx -ffreestanding -fno-pie \
         -nostdlib -nostdinc -fno-asynchronous-unwind-tables \
         -fno-builtin -fno-stack-protector
+else
+EXE_C_COMPILER?=i686-elf-gcc
+FLAGS_CC?=-Os -finline-limit=0 -fno-inline -falign-functions=1 \
+	-falign-jumps=1 -falign-loops=1 -march=i386 \
+	-fcall-used-ax -fcall-used-dx -ffreestanding -fno-pie \
+        -nostdlib -nostdinc -fno-asynchronous-unwind-tables \
+        -fno-builtin -fno-stack-protector
+endif
 FLAGS_C_TO_ASM?=$(FLAGS_CC) -S -o 
 EXE_ASM_COMPILER?=i686-elf-as
 FLAGS_ASM_TO_O?=-o 
