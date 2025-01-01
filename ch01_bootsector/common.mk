@@ -69,6 +69,7 @@ FLAGS_CC?=-Os -mshort-jumps -finline-limit=0 -fno-inline -falign-functions=1 \
         -nostdlib -nostdinc -fno-asynchronous-unwind-tables \
         -fno-builtin -fno-stack-protector
 FLAGS_C_TO_ASM?=$(FLAGS_CC) -S -o 
+EXE_ASM_COMPILER?=i686-elf-as
 FLAGS_ASM_TO_O?=-o 
 EXE_FILTER?=awk
 EXE_LINK=i686-elf-ld
