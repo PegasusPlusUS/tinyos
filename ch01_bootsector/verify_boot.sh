@@ -11,7 +11,7 @@ fi
 
 # Platform detection
 is_windows=0
-if [[ "$OS" == "Windows_NT" || "$(uname -o 2>/dev/null)" == "Msys" ]]; then
+if [ "$OS" = "Windows_NT" ] || [ "$(uname -o 2>/dev/null)" = "Msys" ]; then
     is_windows=1
 fi
 
