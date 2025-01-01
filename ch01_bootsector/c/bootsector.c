@@ -1,11 +1,4 @@
-//Define USE_ASM_BIOS_XXX before include bootsector.h
-#define USE_ASM_BIOS_CLEAR_SCREEN
-#define USE_ASM_BIOS_SET_CURSOR_POS
-#define USE_ASM_BIOS_PRINT_CHAR
-#define USE_ASM_BIOS_SET_PRINT_COLOR
-//#define USE_ASM_BIOS_PRINT_STRING
-
-#include "bootsector.h"
+#include "common_prefix.h"
 
 BEGIN_ASM_BOOTSECTOR;
 
@@ -76,4 +69,4 @@ void __attribute__((noreturn)) __attribute__((no_instrument_function)) bootsecto
     }
 }
 
-END_BOOTSECTOR
+END_ASM_BOOTSECTOR

@@ -2,4 +2,4 @@ void __attribute__((noreturn)) __attribute__((no_instrument_function)) bootsecto
 	start();
 	for(;;) {}
 }
-END_BOOTSECTOR
+END_ASM_BOOTSECTOR

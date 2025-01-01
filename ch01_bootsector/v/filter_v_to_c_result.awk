@@ -57,8 +57,9 @@ in_bootsector_start {
             # matched = substr($0, RSTART + 13, RLENGTH - 13)
             matched = matches[1]        
             # Convert the matched text to uppercase
-            replacement = toupper(matched)
-            # Replace the matched text with the uppercase version
+            #replacement = toupper(matched)
+            replacement = matched
+            # Replace the matched text with the !uppercase version
             $0 = substr($0, 1, RSTART - 1) replacement substr($0, RSTART + RLENGTH)
         }
         gsub(/_const_bootsector__([a-z0-9_]*).str/, "hello_msg")

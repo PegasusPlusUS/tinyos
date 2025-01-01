@@ -6,9 +6,12 @@ const hello_msg := " Hello, world of Bare Metal in V! "
 //const asm_char_1 := 0
 
 fn start() {
-    common_bios.bios_clear_screen();
-    common_bios.bios_set_cursor_pos_p_row_col(10, 23);
-    common_bios.bios_print_string_p_msg(hello_msg.str);
+    common_bios.asm_bios_clear_screen();
+    common_bios.asm_bios_set_cursor_pos(10, 23);
+    common_bios.asm_bios_set_print_color(12);
+    for c in hello_msg {
+        common_bios.asm_bios_print_char(c);
+    }
 
     for {
         //scroll_print_hello()
@@ -16,10 +19,10 @@ fn start() {
 }
 /*
 fn scroll_print_hello() {
-    bios_print_string_p_msg(hello_msg.str + scroll_pos);
+    asm_bios_print_string(hello_msg.str + scroll_pos);
     asm_char_1 = hello_msg[scroll_pos];
     hello_msg[scroll_pos] = 0;
-    bios_print_string_p_msg(hello_msg.str);
+    print_string(hello_msg.str);
 
     if scroll_pos++ >= hello_msg.size {
         scroll_pos = 0;
