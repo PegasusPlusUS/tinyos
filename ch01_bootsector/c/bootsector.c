@@ -51,17 +51,17 @@ char HELLO_MSG[] = " Hi, gcc! ";
 //    }
 //}
 
-void print_string(const char *str) {
+void print_string(const char *str, unsigned char row, unsigned char col, unsigned char colour) {
+    asm_bios_set_print_color(COLOR_GREEN);
     while (*str) {
+        asm_bios_set_cursor_pos(row, col++);
         asm_bios_print_char(*str++);
     }
 }
 
 void __attribute__((noreturn)) __attribute__((no_instrument_function)) bootsector_main(void) {
     asm_bios_clear_screen();
-    asm_bios_set_cursor_pos(12, 5);
-    asm_bios_set_print_color(COLOR_GREEN);
-    print_string(ADV_MSG);
+    print_string(ADV_MSG, 12, 27, COLOR_GREEN);
  
     volatile int delay;
     while (1) {
