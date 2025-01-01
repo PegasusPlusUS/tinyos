@@ -62,7 +62,8 @@ FILES_BUILD_RULES?=Makefile $(BASE_DIR)common.mk
 FILE_TARGET=$(BOOTSECTOR).bin
 
 # Common rules and variables
-EXE_C_COMPILER?=/home/ping/study/gcc-ia16/host-x86_64-pc-linux-gnu/gcc/xgcc
+# Path to ia-16 gcc: /home/ping/study/gcc-ia16/host-x86_64-pc-linux-gnu/gcc/xgcc, cc1
+EXE_C_COMPILER?=xgcc
 FLAGS_CC?=-Os -mshort-jumps -finline-limit=0 -fno-inline -falign-functions=1 \
 	-falign-jumps=1 -falign-loops=1 -march=i8086 \
 	-fcall-used-ax -fcall-used-dx -ffreestanding -fno-pie \
