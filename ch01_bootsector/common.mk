@@ -173,7 +173,7 @@ check_asm: $(FILE_ASM_RESULT)
 # $(FILE_C_TO_ASM_RESULT): $(FILE_LANG_TO_C_FINAL_RESULT) $(FILES_BUILD_RULES)
 # 	@echo "# Compile $(FILE_LANG_TO_C_FINAL_RESULT) to $(FILE_C_TO_ASM_RESULT) by $(EXE_C_COMPILER)."
 # 	@$(EXE_C_COMPILER) $(FLAGS_C_TO_ASM) $(FILE_C_TO_ASM_RESULT) $(FILE_LANG_TO_C_FINAL_RESULT)
-# endif
+endif
 
 neat:
 	rm -f *.o *.s *.pz
