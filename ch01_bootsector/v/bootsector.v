@@ -22,7 +22,7 @@ fn scroll_print_hello() {
     asm_bios_print_string(hello_msg.str + scroll_pos);
     asm_char_1 = hello_msg[scroll_pos];
     hello_msg[scroll_pos] = 0;
-    print_string(hello_msg.str);
+    print_string_at(hello_msg.str);
 
     if scroll_pos++ >= hello_msg.size {
         scroll_pos = 0;

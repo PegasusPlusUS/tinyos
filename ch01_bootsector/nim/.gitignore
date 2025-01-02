@@ -3,3 +3,4 @@ bootsector.elf
 bootsector.o
 bootsector.s
 bootsector.nim.c
+bootsector.nim.asm

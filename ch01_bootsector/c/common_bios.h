@@ -6,7 +6,7 @@ enum {
      COLOR_WHITE = 0x0F,
      COLOR_YELLOW = 0x0E,
      COLOR_CYAN = 0x0D,
-//     COLOR_RED = 0x0C,
+     COLOR_RED = 0x0C,
      COLOR_BLUE = 0x0B,
      COLOR_GREEN = 0x0A,
      COLOR_PURPLE = 0x09,

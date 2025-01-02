@@ -1,3 +1,4 @@
+# FreeBasic version 
 BEGIN {
     LANG_SURFIX = ".bas"
 
@@ -42,8 +43,7 @@ in_bootsector_start {
         next
     } else if (/__builtin_memset/) {
         next
-	# fb_StrAssign( (void*)&MESSAGE$0, -1ll, (void*)"Hello, world of Bare Metal in FreeBASIC!", 41ll, 0 );
-    } else if (/fb_StrDelete/) {
+   } else if (/fb_StrDelete/) {
         next
     } else {
         while (match($0, /fb_StrAssign\( \(void\*\)&/)) {

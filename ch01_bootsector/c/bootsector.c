@@ -1,3 +1,4 @@
+#define USE_C_PRINT_STRING_AT
 #include "common_prefix.h"
 
 BEGIN_ASM_BOOTSECTOR;
@@ -44,17 +45,9 @@ char HELLO_MSG[] = " Hi, gcc! ";
 //    }
 //}
 
-void print_string(const char *str, unsigned char row, unsigned char col, unsigned char colour) {
-    asm_bios_set_print_color(COLOR_GREEN);
-    while (*str) {
-        asm_bios_set_cursor_pos(row, col++);
-        asm_bios_print_char(*str++);
-    }
-}
-
 void __attribute__((noreturn)) __attribute__((no_instrument_function)) bootsector_main(void) {
     asm_bios_clear_screen();
-    print_string(ADV_MSG, 12, 27, COLOR_GREEN);
+    c_print_string_at(ADV_MSG, 12, 27, COLOR_GREEN);
  
     volatile int delay;
     while (1) {
