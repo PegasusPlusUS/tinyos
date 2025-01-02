@@ -42,7 +42,7 @@ jobs:
           tar -xf "fbc_linux-x86_64-${FB_VERSION}.tar.xz" -C /opt
           export PATH="/opt/fbc:${PATH}"
           #>> $GITHUB_ENV
-  
+
       - name: Verify installation
         run: fbc --version
 
