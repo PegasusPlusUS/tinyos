@@ -27,8 +27,23 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y nasm make xxd gcc
 
-          # Install FreeBASIC
-          sudo apt-get install -y freebasic
+      - name: Checkout code 2
+        uses: actions/checkout@v3
+  
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libncurses5 libx11-dev libxext-dev libxrender-dev libxrandr-dev libxfixes-dev
+  
+      - name: Install FreeBASIC
+        run: |
+          FB_VERSION="1.10.0"
+          curl -LO "https://github.com/freebasic/fbc/releases/download/${FB_VERSION}/fbc_linux-x86_64-${FB_VERSION}.tar.xz"
+          tar -xf "fbc_linux-x86_64-${FB_VERSION}.tar.xz" -C /opt
+          echo 'export PATH="/opt/fbc:${PATH}"' >> $GITHUB_ENV
+  
+      - name: Verify installation
+        run: fbc --version
 
           # Install V
           curl -s https://raw.githubusercontent.com/vlang/v/master/install.sh | bash
