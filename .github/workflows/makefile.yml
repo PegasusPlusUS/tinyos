@@ -17,6 +17,13 @@ jobs:
 
       - name: Set up environment
         run: |
+          export CHOOSENIM_NO_ANALYTICS=1
+          export CHOOSENIM_CHOOSE_VERSION=stable
+          curl -sL https://nim-lang.org/choosenim/init.sh | sh -s -- -y
+          
+          # Add Nimble binaries to PATH
+          export PATH="$HOME/.nimble/bin:$PATH"
+
           sudo apt-get update
           sudo apt-get install -y nasm make xxd gcc
 
