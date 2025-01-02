@@ -7,4 +7,5 @@
 **/bootsector.o
 **/bootsector.obj
 **/.obj.obj
+**/*.swp
 ch01_bootsector/nim/bootsector.deps

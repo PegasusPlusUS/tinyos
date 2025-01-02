@@ -1,4 +1,5 @@
-☐ 1. ia16-elf-gcc or i686-elf-gcc but setup esp at startup to see if param is ok
+✔ 1. ia16-elf-gcc or i686-elf-gcc but setup esp at startup to see if param is ok
+ ia16 compile c to asm, i686-elf-gcc compile asm to obj, i686-elf-ld link to target.
 ✔ 2. nasm Makefile reuse common.mk @done(24-12-25 23:12)
 ✔ 3. ch02_timer nasm/c reuse common.mk at ch01 @done(24-12-26 16:46)
 ☐ 4. ch02_timer let V work

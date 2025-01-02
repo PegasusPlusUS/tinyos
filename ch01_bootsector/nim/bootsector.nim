@@ -1,8 +1,7 @@
-include common_bios
+include common
 
 proc start() =
-  BIOS_CLEAR_SCREEN()
-  BIOS_SET_CURSOR_POS_P_ROW_COL(10, 26)
-  BIOS_PRINT_STRING_P_MSG("Hi, bare-metal world by Nim!")
+  asm_bios_clear_screen()
+  c_print_string_at("Hi, bare-metal world by Nim!", 10, 26, ColorGreen)
 
 start()

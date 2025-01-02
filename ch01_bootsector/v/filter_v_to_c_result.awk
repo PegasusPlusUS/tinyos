@@ -38,7 +38,7 @@ in_bootsector_start {
         in_bootsector_start = 0
     } else if (/([a-z0-9_]*)\.len/) {
         # Replace _const_bootsector__<name>.len with sizeof(<name>)
-        gsub(/([a-z0-9_]*)\.len/, "sizeof(\1)")
+        #gsub(/([a-z0-9_]*)\.len/, "sizeof(\1)")
     } else {
         # sed rule s/\\bcommon_bios__([a-z0-9_]*)/\\U&/g' equivalent
         while (match($0, /common_bios__([_a-z0-9]*)/, matches)) {
@@ -57,18 +57,22 @@ in_bootsector_start {
             # matched = substr($0, RSTART + 13, RLENGTH - 13)
             matched = matches[1]        
             # Convert the matched text to uppercase
-            replacement = toupper(matched)
-            # Replace the matched text with the uppercase version
+            #replacement = toupper(matched)
+            replacement = matched
+            # Replace the matched text with the !uppercase version
             $0 = substr($0, 1, RSTART - 1) replacement substr($0, RSTART + RLENGTH)
         }
-        gsub(/_const_bootsector__([a-z0-9_]*).str/, "hello_msg")
+        #gsub(/_const_bootsector__([a-z0-9_]*).str/, "hello_msg.str")
+        #while (match($0, /_const_bootsector__([a-z0-9_]*.str)/, matches)) {
+        #    $0 = substr($0, 1, RSTART - 1) matches[1] substr($0, RSTART + RLENGTH)
+        #}
         #gsub(/bootsector__/, "")
     }
     print
 }
 /string _const_bootsector__/ {
     # Replace _const_bootsector__ with const char[]
-    gsub("string _const_bootsector__", "string ")
+    #gsub("string _const_bootsector__", "string ")
     print
 }
 END { print "#include \"common_suffix" LANG_SURFIX ".h\"" }

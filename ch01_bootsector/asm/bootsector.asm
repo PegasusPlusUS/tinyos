@@ -5,7 +5,7 @@
 
 start:
     INIT_SEGMENTS
-    BIOS_CLEAR_SCREEN
+    asm_bios_clear_screen
 
     PRINT_STRING_COLOR 0, 0, [hello_msg_color], hello_msg
     PRINT_STRING_COLOR 4, 0, [turn_on_msg_color], turn_on_msg
