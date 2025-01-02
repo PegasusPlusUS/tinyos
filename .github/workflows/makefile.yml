@@ -41,7 +41,7 @@ jobs:
           curl -LO "https://github.com/freebasic/fbc/releases/download/${FB_VERSION}/fbc_linux-x86_64-${FB_VERSION}.tar.xz"
           tar -xf "fbc_linux-x86_64-${FB_VERSION}.tar.xz" -C /opt
           export PATH="/opt/fbc:${PATH}"
-          //>> $GITHUB_ENV
+          #>> $GITHUB_ENV
   
       - name: Verify installation
         run: fbc --version
