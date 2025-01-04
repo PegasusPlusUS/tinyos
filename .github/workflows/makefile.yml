@@ -42,7 +42,7 @@ jobs:
           ls -l
           tar -xf "FreeBASIC-1.10.1-linux-x86_64.tar.xz"
           rm FreeBASIC-1.10.1-linux-x86_64.tar.xz
-          mv  /opt/FreeBASIC-1.10.1-linux-x86_64
+          mv FreeBASIC-1.10.1-linux-x86_64 /opt/
           export PATH="/opt/FreeBASIC-1.10.1-linux-x86_64/bin:${PATH}"
           fbc --version
 
