@@ -62,7 +62,7 @@ jobs:
               echo "Building in directory: $dir"
               cd "$dir"
               make clean || true
-              make || { echo "Build failed in $dir"; exit 1; }
+              make build || { echo "Build failed in $dir"; exit 1; }
               echo "Build succeeded in $dir"
               cd -
             fi
