@@ -56,7 +56,8 @@ jobs:
           
       - name: Build and Test in Subdirectories
         run: |
-          for dir in ch01_bootsector/*; do
+          TARGET_DIRS="ch01_bootsector/asm ch01_bootsector/c ch01_bootsector/v ch01_bootsector/bas ch01_bootsector/nim"
+          for dir in $TARGET_DIRS; do
             if [ -d "$dir" ]; then
               echo "Building in directory: $dir"
               cd "$dir"
