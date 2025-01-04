@@ -49,7 +49,8 @@ jobs:
           
       - name: Install V
         run: |
-          curl -s https://raw.githubusercontent.com/vlang/v/master/install.sh | bash
+          curl -L https://github.com/vlang/v/releases/download/weekly.2024.53/v_linux.zip -o v_linux.zip
+          unzip v_linux.zip
           export PATH="$HOME/.vlang/bin:$PATH"
           echo "V install complete."
           
