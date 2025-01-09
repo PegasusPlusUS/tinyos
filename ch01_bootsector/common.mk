@@ -67,9 +67,9 @@ FILE_TARGET=$(BOOTSECTOR).bin
 OS := $(shell uname)
 
 ifeq ($(OS), Linux)
-EXE_C_COMPILER?=xgcc
-FLAGS_CC?=-Os -mshort-jumps -finline-limit=0 -fno-inline -falign-functions=1 \
-	-falign-jumps=1 -falign-loops=1 -march=i8086 \
+EXE_C_COMPILER?=/opt/gcc-ia16/bin/ia16-elf-gcc
+FLAGS_CC?=-Os -fshort-enums -finline-limit=0 -fno-inline -falign-functions=1 \
+	-falign-jumps=1 -falign-loops=1 \
 	-fcall-used-ax -fcall-used-dx -ffreestanding -fno-pie \
         -nostdlib -nostdinc -fno-asynchronous-unwind-tables \
         -fno-builtin -fno-stack-protector

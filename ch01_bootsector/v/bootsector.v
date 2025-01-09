@@ -5,7 +5,7 @@ const hello_msg := " Hello, world of Bare Metal in V! "
 //const scroll_pos := 0
 //const asm_char_1 := 0
 
-fn start() {
+fn bootsector_start() {
     common_bios.asm_bios_clear_screen();
     common_bios.asm_bios_set_cursor_pos(10, 23);
     common_bios.asm_bios_set_print_color(12);
