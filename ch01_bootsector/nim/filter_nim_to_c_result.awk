@@ -26,7 +26,7 @@ in_string_declaration {
         print "string " var_name " = \"" strcontent "\";";
     }
 }
-/N_LIB_PRIVATE N_NIMCALL\(void, start__bootsector_u7\)\(void\) \{/ {
+/N_LIB_PRIVATE N_NIMCALL\(void, start__bootsector_u([0-9]+)\)\(void\) \{/ {
     in_bootsector_start = 1
     print "void start() {"
     next
@@ -57,6 +57,7 @@ in_bootsector_start {
         gsub(/\(NU8\)/, " ")
         gsub(/nimln_\([0-9]*\);\t/, "")
         gsub(/__bootsector_u[0-9]*/, "")
+        gsub(/tyEnum_([_a-zA-Z0-9]*)/, "NU8")
         #gsub(/_p_/, "__")
     }
     print

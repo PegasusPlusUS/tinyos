@@ -2,9 +2,9 @@ name: Build and Test ch01_bootsector
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ "main", "ci" ]
   pull_request:
-    branches: [ "main" ]
+    branches: [ "main", "ci" ]
 
 jobs:
   build:
@@ -17,30 +17,52 @@ jobs:
 
       - name: Set up environment
         run: |
+          export CHOOSENIM_NO_ANALYTICS=1
+          export CHOOSENIM_CHOOSE_VERSION=stable
+          curl -sL https://nim-lang.org/choosenim/init.sh | sh -s -- -y
+          
+          # Add Nimble binaries to PATH
+          export PATH="$HOME/.nimble/bin:$PATH"
+
           sudo apt-get update
           sudo apt-get install -y nasm make xxd gcc
 
-          # Install FreeBASIC
-          sudo apt-get install -y freebasic
-
-          # Install Nim
-          curl -sL https://nim-lang.org/choosenim/init.sh | sh
-          export PATH="$HOME/.nimble/bin:$PATH"
-
-          # Install V
-          curl -s https://raw.githubusercontent.com/vlang/v/master/install.sh | bash
+      - name: Checkout code 2
+        uses: actions/checkout@v3
+  
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libncurses5 libx11-dev libxext-dev libxrender-dev libxrandr-dev libxfixes-dev
+  
+      - name: Install FreeBASIC
+        run: |
+          FB_VERSION="1.10.1"
+          curl -L "http://downloads.sourceforge.net/fbc/FreeBASIC-1.10.1-linux-x86_64.tar.xz?download" -o FreeBASIC-1.10.1-linux-x86_64.tar.xz
+          ls -l
+          tar -xf "FreeBASIC-1.10.1-linux-x86_64.tar.xz"
+          rm FreeBASIC-1.10.1-linux-x86_64.tar.xz
+          mv FreeBASIC-1.10.1-linux-x86_64 /opt/
+          export PATH="/opt/FreeBASIC-1.10.1-linux-x86_64/bin:${PATH}"
+          fbc --version
+          echo "FreeBasic setup completed."
+          
+      - name: Install V
+        run: |
+          curl -L https://github.com/vlang/v/releases/download/weekly.2024.53/v_linux.zip -o v_linux.zip
+          unzip v_linux.zip
           export PATH="$HOME/.vlang/bin:$PATH"
-
-          echo "Environment setup completed."
-
+          echo "V install complete."
+          
       - name: Build and Test in Subdirectories
         run: |
-          for dir in ch01_bootsector/*; do
+          TARGET_DIRS="ch01_bootsector/asm ch01_bootsector/c ch01_bootsector/v ch01_bootsector/bas ch01_bootsector/nim"
+          for dir in $TARGET_DIRS; do
             if [ -d "$dir" ]; then
               echo "Building in directory: $dir"
               cd "$dir"
               make clean || true
-              make || { echo "Build failed in $dir"; exit 1; }
+              make build || { echo "Build failed in $dir"; exit 1; }
               echo "Build succeeded in $dir"
               cd -
             fi
